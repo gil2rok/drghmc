@@ -1,8 +1,5 @@
 import subprocess
 
-# install bayes-kit locally
-# subprocess.run(["pip", "install", "-q", "-e", "../../bayes-kit"])
-
 import numpy as np
 import os
 from bayes_kit.drghmc import DrGhmcDiag

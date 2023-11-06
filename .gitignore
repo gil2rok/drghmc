@@ -1,6 +1,8 @@
-# My custom gitignore files
+### Start of my custom gitignore files ###
 data/logs/
 data/raw/
+
+### End of my custom gitignore files ###
 
 # Created by https://www.toptal.com/developers/gitignore/api/python,visualstudiocode,git,jupyternotebooks
 # Edit at https://www.toptal.com/developers/gitignore?templates=python,visualstudiocode,git,jupyternotebooks
@@ -205,9 +207,9 @@ pyrightconfig.json
 
 ### VisualStudioCode ###
 .vscode/*
-!.vscode/settings.json
+# !.vscode/settings.json
 !.vscode/tasks.json
-!.vscode/launch.json
+# !.vscode/launch.json
 !.vscode/extensions.json
 !.vscode/*.code-snippets
 

@@ -1,5 +1,3 @@
-import os
-import sys
 import argparse
 from collections import namedtuple
 
@@ -8,9 +6,8 @@ from mpi4py import MPI
 import numpy as np
 from sklearn.model_selection import ParameterGrid
 
-sys.path.append("../../")
-from utils.misc_utils import my_save, grad_counter, call_counter
-from utils.samplers import bayes_kit_hmc, bayes_kit_mala, hmc, ghmc, drhmc, drghmc
+from src.utils.misc_utils import my_save, call_counter
+from src.utils.samplers import bayes_kit_hmc, bayes_kit_mala, hmc, ghmc, drhmc, drghmc
 
 HyperParamsTuple = namedtuple(
     "hyper_params",
@@ -190,7 +187,7 @@ def drghmc_runner(hp):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--model_num", type=int, help="PDB model number")
+    parser.add_argument("--model_num", type=str, help="PDB model number")
     args = parser.parse_args()
 
     hp = HyperParamsTuple(
@@ -199,9 +196,9 @@ if __name__ == "__main__":
         burn_in_gradeval=100,  # initialize with reference sample, don't require real burn-in
         chain_length_gradeval=500000,
         global_seed=0,
-        save_dir="../../../ceph/drghmc/res",
-        pdb_dir="../../models",
-        bridgestan_dir="../../../.bridgestan/bridgestan-2.1.1/",
+        save_dir="data/raw",
+        pdb_dir="models/posteriordb/posterior_database",
+        bridgestan_dir="../../.bridgestan/bridgestan-2.1.1/",
     )
     
     print(hp.chain_num)

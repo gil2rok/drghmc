@@ -4,7 +4,7 @@ from typing import Iterator, Optional, Tuple
 import numpy as np
 from numpy.typing import ArrayLike
 
-from .typing import DrawAndLogP, GradModel, Seed, VectorType
+from .utils.typing import DrawAndLogP, GradModel, Seed, VectorType
 
 
 class DrGhmcDiag:
@@ -80,6 +80,7 @@ class DrGhmcDiag:
         # use stack to avoid redundant computation within a single draw (when
         # recursively computing the log acceptance probability) and across draws
         self._log_density_gradient_cache: list[Tuple[float, VectorType]] = []
+        self._acceptance_list = []
         self._validate_arguments()
 
     def _validate_arguments(self) -> None:

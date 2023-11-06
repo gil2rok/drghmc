@@ -4,7 +4,7 @@ import json
 import os
 import functools
 
-from .posteriordb import BSDB
+from .posteriordb_utils import BSDB
 from .hash_util import get_hash_str
 
 
@@ -31,6 +31,10 @@ def grad_counter(f):
 
 def get_model(model_num, pdb_dir):
     return BSDB(model_num, pdb_dir)
+
+
+def get_init(model_num, pdb_dir):
+    return BSDB(model_num, pdb_dir).get_reference_draws()
 
 
 def get_param_hash(sp, sampler_type, burn_in, chain_length):
@@ -89,7 +93,7 @@ def my_save(sp, hp, burned_draws, draws, sampler_type, sampler):
     param_hash = get_param_hash(sp, sampler_type, burn_in, chain_len)
     dir_name = os.path.join(
         hp.save_dir,
-        f"PDB_{hp.model_num:02d}",
+        hp.model_num,
         f"{sampler_type}_{param_hash}",
         f"chain_{hp.chain_num:02d}",
     )

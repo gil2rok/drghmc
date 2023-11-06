@@ -7,8 +7,8 @@ from posteriordb import PosteriorDatabase
         
 class PDB():
     def __init__(self, model_n, modelname='', PDBPATH='/mnt/ceph/users/cmodi/PosteriorDB/'):
-        self.model_path = os.path.join(PDBPATH, f'PDB_{model_n:02d}')
-        self.id = f"{model_n:02d}"
+        # self.model_path = os.path.join(PDBPATH, f'PDB_{model_n:02d}')
+        # self.id = f"{model_n:02d}"
         self.stan_model = self.code()
         self.data = self.dataset()
         self.get_reference_draws()
@@ -58,23 +58,24 @@ class PDB():
         return contents
 
         
-class BSDB(PDB):
+# class BSDB(PDB):
+#     def __init__(self, model_n, PDBPATH):
+#         super().__init__(model_n, PDBPATH=PDBPATH)
+        
+class BSDB():
     def __init__(self, model_n, PDBPATH):
-        super().__init__(model_n, PDBPATH=PDBPATH)
         
         # Extract paths and load models
         
         # prepend_path = os.path.join(self.model_path, f'PDB_{model_n:02d}')
         # stanpath = prepend_path + '.stan'
-        #datapath = prepend_path + '.data.json'
-        
+        #datapath = prepend_path + '.data.json
         self.posterior = PosteriorDatabase(PDBPATH).posterior(model_n)
         stanpath = self.posterior.model.code_file_path("stan")
-        datapath = self.posterior.data.file_path()
-        
-        self.bsmodel = bs.StanModel.from_stan_file(stanpath, datapath)
+        data = json.dumps(self.posterior.data.values())
+        self.bsmodel = bs.StanModel.from_stan_file(stanpath,data)
         self.dimensions = self.bsmodel.param_unc_num()
-        self.samples_unc = self.unconstrain(self.samples)
+        # self.samples_unc = self.unconstrain(self.samples)
 
     def log_density(self, x):
         '''
@@ -121,16 +122,21 @@ class BSDB(PDB):
     def dims(self):
         return self.dimensions
     
-    def get_reference_draws(self):
-        self.posterior.reference_draws()
+    def get_reference_draws(self): 
+        ref_draws = []
+        for chain in self.posterior.reference_draws():
+            samples = np.vstack([np.array(i) for i in chain.values()]).T
+            ref_draws.append(samples)
+        return np.array(ref_draws)  # [chain_num, n_samples, params_dim] 
+              
         
-        params_file = os.path.join(self.model_path, f'PDB_{self.id}.samples.meta')
-        with open(params_file, 'r') as f:
-            self.parameters = [i for i in f.readline()]
+        # params_file = os.path.join(self.model_path, f'PDB_{self.id}.samples.meta')
+        # with open(params_file, 'r') as f:
+        #     self.parameters = [i for i in f.readline()]
             
-        self.reference_draws = np.load(f'{self.model_path}/PDB_{self.id}.samples.npy')
-        self.sample_chains = np.concatenate([i for i in self.reference_draws])
-        self.samples = self.sample_chains.reshape(-1, self.sample_chains.shape[-1])
+        # self.reference_draws = np.load(f'{self.model_path}/PDB_{self.id}.samples.npy')
+        # self.sample_chains = np.concatenate([i for i in self.reference_draws])
+        # self.samples = self.sample_chains.reshape(-1, self.sample_chains.shape[-1])
 
 
 if __name__ == "__main__":

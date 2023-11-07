@@ -6,8 +6,8 @@ from mpi4py import MPI
 import numpy as np
 from sklearn.model_selection import ParameterGrid
 
-from src.utils.misc_utils import my_save, stan_save, call_counter
-from src.utils.samplers import bayes_kit_hmc, bayes_kit_mala, stan_nuts, hmc, ghmc, drhmc, drghmc
+from src.utils.save_samples import my_save, stan_save, call_counter
+from src.utils.configure_samplers import bayes_kit_hmc, bayes_kit_mala, stan_nuts, hmc, ghmc, drhmc, drghmc
 
 HyperParamsTuple = namedtuple(
     "hyper_params",
@@ -54,8 +54,16 @@ def experiment(sampler, hp, burn_in, chain_len):
 def stan_nuts_runner(hp):
     sampler_type = "nuts"
     
-    nuts = stan_nuts(hp)
-    stan_save(nuts, sampler_type, hp)
+    model, data, seed, init = stan_nuts(hp)
+    nuts_fit = model.sample(
+        data=data,
+        chains=1,
+        seed=seed,
+        inits=init,
+        adapt_init_phase=0  # b/c init from reference draw
+    )
+    
+    stan_save(nuts_fit, sampler_type, hp)
 
 
 def bayes_kit_hmc_runner(hp):
@@ -204,7 +212,7 @@ if __name__ == "__main__":
         chain_length_gradeval=500000,
         global_seed=0,
         save_dir="data/raw",
-        pdb_dir="models/posteriordb/posterior_database",
+        pdb_dir="posteriors/",
         bridgestan_dir="../../.bridgestan/bridgestan-2.1.1/",
     )
     

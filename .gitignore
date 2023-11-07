@@ -2,10 +2,45 @@
 data/logs/
 data/raw/
 
+# I also commented out lines about .vscode files for launcher.json and settings.json
 ### End of my custom gitignore files ###
 
-# Created by https://www.toptal.com/developers/gitignore/api/python,visualstudiocode,git,jupyternotebooks
-# Edit at https://www.toptal.com/developers/gitignore?templates=python,visualstudiocode,git,jupyternotebooks
+# Created by https://www.toptal.com/developers/gitignore/api/python,c++,jupyternotebooks,visualstudiocode,git
+# Edit at https://www.toptal.com/developers/gitignore?templates=python,c++,jupyternotebooks,visualstudiocode,git
+
+### C++ ###
+# Prerequisites
+*.d
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Fortran module files
+*.mod
+*.smod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
 
 ### Git ###
 # Created by git for backups. To disable backups in Git:
@@ -43,7 +78,6 @@ __pycache__/
 *$py.class
 
 # C extensions
-*.so
 
 # Distribution / packaging
 .Python
@@ -207,9 +241,9 @@ pyrightconfig.json
 
 ### VisualStudioCode ###
 .vscode/*
-# !.vscode/settings.json
+#  !.vscode/settings.json
 !.vscode/tasks.json
-# !.vscode/launch.json
+#  !.vscode/launch.json
 !.vscode/extensions.json
 !.vscode/*.code-snippets
 
@@ -224,4 +258,4 @@ pyrightconfig.json
 .history
 .ionide
 
-# End of https://www.toptal.com/developers/gitignore/api/python,visualstudiocode,git,jupyternotebooks
+# End of https://www.toptal.com/developers/gitignore/api/python,c++,jupyternotebooks,visualstudiocode,git

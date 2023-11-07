@@ -1,5 +1,6 @@
 import os
 
+from cmdstanpy import CmdStanModel
 import numpy as np
 
 from ..drghmc import DrGhmcDiag
@@ -40,6 +41,33 @@ def bayes_kit_mala(hp, sp):
     init = model.unconstrain(init_constrained)
 
     return MALA(model=model, epsilon=sp.init_stepsize, init=None, seed=seed)
+
+
+def stan_nuts(hp):
+    posterior = get_model(hp.model_num, hp.pdb_dir).get_posterior()
+    stan_code = posterior.model.code_file_path("stan")
+    data = posterior.data.values()
+    
+    
+    init = dict()
+    ref_draws = posterior.reference_draws()[hp.chain_num]
+    for param_name, param_value in ref_draws.items():
+        init[param_name] = param_value[-1]
+    
+    # seed depends on global seed and chain number
+    seed = int(str(hp.global_seed) + str(hp.chain_num))
+    
+    model = CmdStanModel(stan_file=stan_code)
+    
+    fit = model.sample(
+        data=data,
+        chains=1,
+        seed=seed,
+        inits=init,
+        adapt_init_phase=0  # b/c init from reference draw
+    )
+    
+    return fit
 
 
 def hmc(hp, sp):

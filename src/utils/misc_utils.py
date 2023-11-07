@@ -76,6 +76,37 @@ def compute_acceptance(sampler, sampler_type, burn_in, sp):
     return acceptances, burned_acceptances, accept_list, accept_rate_total
 
 
+def stan_save(nuts, sampler_type, hp):
+    draws = nuts.draws()  # [num samples, num chains, num params]
+    stepsize = nuts.step_size
+    metric = nuts.metric
+    
+    param_hash = get_param_hash("", sampler_type, stepsize, metric)
+    dir_name = os.path.join(
+        hp.save_dir,
+        hp.model_num,
+        f"{sampler_type}_{param_hash}",
+        f"chain_{hp.chain_num:02d}",
+    )
+    Path(dir_name).mkdir(parents=True, exist_ok=True)
+    
+    np.save(os.path.join(dir_name, "draws"), draws.astype(np.float16))
+    
+    # save hyper parameters as json
+    with open(os.path.join(dir_name, "hyper_params.json"), "w") as file:
+        file.write(json.dumps(hp._asdict()))
+        
+    # save sampler parameters as json
+    with open(os.path.join(dir_name, "sampler_params.json"), "w") as file:
+        sp_dict = {}
+        sp_dict["sampler_type"] = sampler_type
+        sp_dict["stepsize"] = float(stepsize)
+        sp_dict["metric"] = metric.tolist()[0]
+        
+        print(type(sp_dict["metric"]), sp_dict["metric"])
+        file.write(json.dumps(sp_dict))
+
+
 def my_save(sp, hp, burned_draws, draws, sampler_type, sampler):
     # burn in and chain length
     burn_in = (

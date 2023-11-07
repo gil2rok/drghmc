@@ -70,10 +70,17 @@ class BSDB():
         # prepend_path = os.path.join(self.model_path, f'PDB_{model_n:02d}')
         # stanpath = prepend_path + '.stan'
         #datapath = prepend_path + '.data.json
-        self.posterior = PosteriorDatabase(PDBPATH).posterior(model_n)
-        stanpath = self.posterior.model.code_file_path("stan")
-        data = json.dumps(self.posterior.data.values())
-        self.bsmodel = bs.StanModel.from_stan_file(stanpath,data)
+        
+        if model_n in PosteriorDatabase(PDBPATH).posterior_names():
+            self.pdb = True
+            self.posterior = PosteriorDatabase(PDBPATH).posterior(model_n)
+            stanpath = self.posterior.model.code_file_path("stan")
+            data = json.dumps(self.posterior.data.values())
+            self.bsmodel = bs.StanModel.from_stan_file(stanpath, data, seed=0, make_args=["TBB_CXX_TYPE=gcc"])
+        else:
+            raise Exception("Model not found in PosteriorDB")
+            
+        
         self.dimensions = self.bsmodel.param_unc_num()
         # self.samples_unc = self.unconstrain(self.samples)
 
@@ -121,6 +128,9 @@ class BSDB():
         
     def dims(self):
         return self.dimensions
+    
+    def get_posterior(self):
+        return self.posterior
     
     def get_reference_draws(self): 
         ref_draws = []

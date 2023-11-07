@@ -6,8 +6,8 @@ from mpi4py import MPI
 import numpy as np
 from sklearn.model_selection import ParameterGrid
 
-from src.utils.misc_utils import my_save, call_counter
-from src.utils.samplers import bayes_kit_hmc, bayes_kit_mala, hmc, ghmc, drhmc, drghmc
+from src.utils.misc_utils import my_save, stan_save, call_counter
+from src.utils.samplers import bayes_kit_hmc, bayes_kit_mala, stan_nuts, hmc, ghmc, drhmc, drghmc
 
 HyperParamsTuple = namedtuple(
     "hyper_params",
@@ -49,6 +49,13 @@ def experiment(sampler, hp, burn_in, chain_len):
     draws = np.asanyarray([sampler.sample()[0] for _ in range(chain_len)])
     
     return burned_draws, draws
+
+
+def stan_nuts_runner(hp):
+    sampler_type = "nuts"
+    
+    nuts = stan_nuts(hp)
+    stan_save(nuts, sampler_type, hp)
 
 
 def bayes_kit_hmc_runner(hp):
@@ -205,5 +212,6 @@ if __name__ == "__main__":
 
     #  hmc_runner(hp)
     #  ghmc_runner(hp)
-    drhmc_runner(hp)
-    drghmc_runner(hp)
+    #  drhmc_runner(hp)
+    #  drghmc_runner(hp)
+    stan_nuts_runner(hp)

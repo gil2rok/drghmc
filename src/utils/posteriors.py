@@ -1,5 +1,4 @@
-import json
-import os
+import json, os, zipfile
 
 import bridgestan as bs
 from cmdstanpy import CmdStanModel
@@ -51,8 +50,8 @@ def bayes_kit_posterior(model_name, posterior_path):
         data_path = os.path.join(path, f"{model_name}.data.json")
         data = json.load(open(data_path, "r"))
         
-        ref_draws_path = os.path.join(path, f"{model_name}.ref_draws.json")
-        ref_draws = json.load(open(ref_draws_path, "r"))
+        ref_draws_path = os.path.join(path, f"{model_name}.ref_draws.json.zip")
+        ref_draws = json.load(zipfile.ZipFile(ref_draws_path).open(f"{model_name}.ref_draws.json"))
         
     model = BayesKitModel(model_path, json.dumps(data))
     return model, ref_draws
@@ -75,8 +74,8 @@ def stan_posterior(model_name, posterior_path):
         data_path = os.path.join(path, f"{model_name}.data.json")
         data = json.load(open(data_path, "r"))
         
-        ref_draws_path = os.path.join(path, f"{model_name}.ref_draws.json")
-        ref_draws = json.load(open(ref_draws_path, "r"))
+        ref_draws_path = os.path.join(path, f"{model_name}.ref_draws.json.zip")
+        ref_draws = json.load(zipfile.ZipFile(ref_draws_path).open(f"{model_name}.ref_draws.json"))
         
     model = CmdStanModel(stan_file=model_path)
     return model, data, ref_draws

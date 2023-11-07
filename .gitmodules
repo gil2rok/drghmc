@@ -1,4 +1,4 @@
 [submodule "posteriors/posteriordb"]
 	path = posteriors/posteriordb
-	url = https://github.com/stan-dev/posteriordb.git
+	url = https://github.com/stan-dev/posteriordb
 	ignore = untracked

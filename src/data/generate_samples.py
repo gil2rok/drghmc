@@ -221,5 +221,5 @@ if __name__ == "__main__":
     #  hmc_runner(hp)
     #  ghmc_runner(hp)
     #  drhmc_runner(hp)
-    #  drghmc_runner(hp)
-    stan_nuts_runner(hp)
+    drghmc_runner(hp)
+    #  stan_nuts_runner(hp)

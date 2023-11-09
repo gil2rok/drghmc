@@ -1,9 +1,38 @@
-import os
+import json, os
 
 import numpy as np
+import pandas as pd
 
 from ..drghmc import DrGhmcDiag
 from .posteriors import get_posterior
+
+
+def get_stan_params(hp):
+    path = os.path.join("data/raw/", hp.model_num)
+    all_dirs = os.listdir(path)
+    
+    stan_path = None
+    for dir in all_dirs:
+        if dir.startswith("nuts"):
+            stan_path = os.path.join(
+                path, dir, 
+                f"chain_{hp.chain_num:02d}", 
+                f"run_{hp.global_seed:02d}"
+            )
+            break
+    
+    if not stan_path:
+        raise ValueError("Bayes-Kit sampler must be called after Stan sampler")
+    
+    stan_params = json.load(open(os.path.join(stan_path, "sampler_params.json"), "r"))
+    stan_df = pd.read_csv(os.path.join(stan_path, "draws.csv"), sep="\t")
+    
+    metric = [1/x for x in stan_params["metric"]]
+    stepsize = stan_params["stepsize"]
+    num_steps_p90 = np.percentile(stan_df["n_leapfrog__"], 90)
+    
+    return metric, stepsize, num_steps_p90
+
 
 def bayes_kit_hmc(hp, sp):
     model = get_model(hp.model_num, hp.pdb_dir)
@@ -44,14 +73,17 @@ def bayes_kit_mala(hp, sp):
 def stan_nuts(hp):
     model, data, ref_draws = get_posterior(hp.model_num, hp.pdb_dir, "stan")
 
-    init = dict()
+
+    init, metric = dict(), list()
     for param_name, param_value in ref_draws[hp.chain_num].items():
         init[param_name] = param_value[-1]
+        metric.append(np.std(param_value))
+    inv_metric = {"inv_metric": [1 / el for el in metric]}
 
     # seed depends on global seed and chain number
     seed = int(str(hp.global_seed) + str(hp.chain_num))
     
-    return model, data, seed, init
+    return model, data, seed, init, inv_metric
 
 
 def hmc(hp, sp):
@@ -63,9 +95,10 @@ def hmc(hp, sp):
     # seed depends on global seed and chain number
     seed = int(str(hp.global_seed) + str(hp.chain_num))
     
-    init = dict()
+    init, metric = dict(), list()
     for param_name, param_value in ref_draws[hp.chain_num].items():
         init[param_name] = param_value[-1]
+        metric.append(np.std(param_value))
     init = np.array(list(init.values()), dtype=np.float64)
 
 
@@ -75,6 +108,7 @@ def hmc(hp, sp):
         leapfrog_step_sizes=stepsize,
         leapfrog_step_counts=[sp.steps],
         damping=1.0,
+        metric_diag=metric,
         init=init,
         seed=seed,
         prob_retry=False,
@@ -90,9 +124,10 @@ def ghmc(hp, sp):
     # seed depends on global seed and chain number
     seed = int(str(hp.global_seed) + str(hp.chain_num))
 
-    init = dict()
+    init, metric = dict(), list()
     for param_name, param_value in ref_draws[hp.chain_num].items():
         init[param_name] = param_value[-1]
+        metric.append(np.std(param_value))
     init = np.array(list(init.values()), dtype=np.float64)
 
     return DrGhmcDiag(
@@ -101,6 +136,7 @@ def ghmc(hp, sp):
         leapfrog_step_sizes=stepsize,
         leapfrog_step_counts=[1],
         damping=sp.dampening,
+        metric_diag=metric,
         init=init,
         seed=seed,
         prob_retry=False,
@@ -109,22 +145,27 @@ def ghmc(hp, sp):
 
 def drhmc(hp, sp):
     model, ref_draws = get_posterior(hp.model_num, hp.pdb_dir, "bayeskit")
+    stan_metric, stan_stepsize, stan_steps = get_stan_params(hp)
     
+    init_stepsize = stan_stepsize if stan_stepsize else sp.init_stepsize
     stepsize = [
-        sp.init_stepsize * (sp.reduction_factor**-k) for k in range(sp.num_proposals)
+        init_stepsize * (sp.reduction_factor**-k) for k in range(sp.num_proposals)
     ]
 
-    traj_len = sp.steps * stepsize[0]
+    init_steps = stan_steps if stan_steps else sp.steps
+    traj_len = init_steps * stepsize[0]
     steps = [
         int(traj_len / stepsize[k]) for k in range(sp.num_proposals)
     ]  # const traj len
     # seed depends on global seed and chain number
     seed = int(str(hp.global_seed) + str(hp.chain_num))
 
-    init = dict()
+    init, metric = dict(), list()
     for param_name, param_value in ref_draws[hp.chain_num].items():
         init[param_name] = param_value[-1]
+        metric.append(np.std(param_value))
     init = np.array(list(init.values()), dtype=np.float64)
+    metric = stan_metric
 
     return DrGhmcDiag(
         model=model,
@@ -132,6 +173,7 @@ def drhmc(hp, sp):
         leapfrog_step_sizes=stepsize,
         leapfrog_step_counts=steps,
         damping=1.0,
+        metric_diag=metric,
         init=init,
         seed=seed,
         prob_retry=sp.probabilistic,
@@ -140,14 +182,16 @@ def drhmc(hp, sp):
 
 def drghmc(hp, sp):
     model, ref_draws = get_posterior(hp.model_num, hp.pdb_dir, "bayeskit")
+    stan_metric, stan_stepsize, stan_steps = get_stan_params(hp)
     
+    init_stepsize = stan_stepsize if stan_stepsize else sp.init_stepsize
     stepsize = [
-        sp.init_stepsize * (sp.reduction_factor**-k) for k in range(sp.num_proposals)
+        init_stepsize * (sp.reduction_factor**-k) for k in range(sp.num_proposals)
     ]
 
     if sp.steps == 1:
         # const number of steps (ghmc)
-        steps = [sp.steps for k in range(sp.num_proposals)]
+        steps = [sp.steps for _ in range(sp.num_proposals)]
     elif sp.steps == "const_traj_len":
         # const trajectory length (drhmc)
         init_steps = 1
@@ -159,10 +203,12 @@ def drghmc(hp, sp):
     # seed depends on global seed and chain number
     seed = int(str(hp.global_seed) + str(hp.chain_num))
 
-    init = dict()
+    init, metric = dict(), list()
     for param_name, param_value in ref_draws[hp.chain_num].items():
         init[param_name] = param_value[-1]
+        metric.append(np.std(param_value))
     init = np.array(list(init.values()), dtype=np.float64)
+    metric = stan_metric
 
     return DrGhmcDiag(
         model=model,
@@ -170,6 +216,7 @@ def drghmc(hp, sp):
         leapfrog_step_sizes=stepsize,
         leapfrog_step_counts=steps,
         damping=sp.dampening,
+        metric_diag=metric,
         init=init,
         seed=seed,
         prob_retry=sp.probabilistic,

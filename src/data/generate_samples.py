@@ -54,13 +54,14 @@ def experiment(sampler, hp, burn_in, chain_len):
 def stan_nuts_runner(hp):
     sampler_type = "nuts"
     
-    model, data, seed, init = stan_nuts(hp)
+    model, data, seed, init, inv_metric = stan_nuts(hp)
     nuts_fit = model.sample(
         data=data,
         chains=1,
         seed=seed,
         inits=init,
-        adapt_init_phase=0  # b/c init from reference draw
+        metric=inv_metric,
+        #  adapt_init_phase=0  # b/c init from reference draw
     )
     
     stan_save(nuts_fit, sampler_type, hp)
@@ -149,9 +150,9 @@ def drhmc_runner(hp):
     sampler_type = "drhmc"
     sampler_param_grid = ParameterGrid(
         {
-            "init_stepsize": [1e-2, 5e-2, 1e-1, 2e-1],
-            "reduction_factor": [2, 4, 5],
-            "steps": [10, 20, 30 ,50],
+            "init_stepsize": [0.12063],
+            "reduction_factor": [2, 4],
+            "steps": [70, 35],
             "num_proposals": [2, 3, 4],
             "probabilistic": [False],
         }
@@ -162,7 +163,8 @@ def drhmc_runner(hp):
         sampler = drhmc(hp, sp)
 
         burn_in = int(hp.burn_in_gradeval / sp.steps)
-        chain_len = int(hp.chain_length_gradeval / sp.steps)
+        #  chain_len = int(hp.chain_length_gradeval / sp.steps)
+        chain_len = 1000
 
         burned_draws, draws = experiment(sampler, hp, burn_in, chain_len)
         my_save(sp, hp, burned_draws, draws, sampler_type, sampler)
@@ -172,10 +174,10 @@ def drghmc_runner(hp):
     sampler_type = "drghmc"
     sampler_param_grid = ParameterGrid(
         {
-            "init_stepsize": [1e-2, 5e-2, 1e-1, 2e-1],
-            "reduction_factor": [2, 4, 5],
+            "init_stepsize": [0.12063],
+            "reduction_factor": [2, 4],
             "steps": ["const_traj_len", 1],
-            "dampening": [0.01, 0.05, 0.1, 0.2],
+            "dampening": [0.01, 0.05, 0.1, 0.2, 0.3],
             "num_proposals": [1, 2, 3, 4],
             "probabilistic": [False],
         }
@@ -190,11 +192,12 @@ def drghmc_runner(hp):
             if type(sp.steps) is int
             else hp.burn_in_gradeval
         )
-        chain_len = (
-            int(hp.chain_length_gradeval / sp.steps)
-            if type(sp.steps) is int
-            else hp.chain_length_gradeval
-        )
+        # chain_len = (
+        #     int(hp.chain_length_gradeval / sp.steps)
+        #     if type(sp.steps) is int
+        #     else hp.chain_length_gradeval
+        # )
+        chain_len = 1000
 
         burned_draws, draws = experiment(sampler, hp, burn_in, chain_len)
         my_save(sp, hp, burned_draws, draws, sampler_type, sampler)
@@ -207,19 +210,19 @@ if __name__ == "__main__":
 
     hp = HyperParamsTuple(
         model_num=args.model_num,
-        chain_num=MPI.COMM_WORLD.Get_rank(),
-        burn_in_gradeval=100,  # initialize with reference sample, don't require real burn-in
+        chain_num=0,
+        burn_in_gradeval=0,  # initialize with reference sample, don't require real burn-in
         chain_length_gradeval=500000,
-        global_seed=0,
+        global_seed=MPI.COMM_WORLD.Get_rank(),  # represents an individual "run"
         save_dir="data/raw",
         pdb_dir="posteriors/",
         bridgestan_dir="../../.bridgestan/bridgestan-2.1.1/",
     )
     
-    print(hp.chain_num)
+    print(hp.global_seed)
 
+    stan_nuts_runner(hp)
     #  hmc_runner(hp)
     #  ghmc_runner(hp)
-    #  drhmc_runner(hp)
+    drhmc_runner(hp)
     drghmc_runner(hp)
-    #  stan_nuts_runner(hp)

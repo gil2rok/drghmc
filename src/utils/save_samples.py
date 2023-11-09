@@ -4,6 +4,8 @@ import json
 import os
 import functools
 
+import pandas as pd
+
 from .hashing import get_hash_str
 
 
@@ -70,17 +72,20 @@ def stan_save(nuts, sampler_type, hp):
     draws = nuts.draws()  # [num samples, num chains, num params]
     stepsize = nuts.step_size
     metric = nuts.metric
+    draws_df = nuts.draws_pd()
     
-    param_hash = get_param_hash("", sampler_type, stepsize, metric)
+    param_hash = get_param_hash("", sampler_type, 0, 1000)
     dir_name = os.path.join(
         hp.save_dir,
         hp.model_num,
         f"{sampler_type}_{param_hash}",
         f"chain_{hp.chain_num:02d}",
+        f"run_{hp.global_seed:02d}"
     )
     Path(dir_name).mkdir(parents=True, exist_ok=True)
     
     np.save(os.path.join(dir_name, "draws"), draws.astype(np.float16))
+    draws_df.to_csv(os.path.join(dir_name, "draws.csv"), sep="\t")
     
     # save hyper parameters as json
     with open(os.path.join(dir_name, "hyper_params.json"), "w") as file:
@@ -93,7 +98,6 @@ def stan_save(nuts, sampler_type, hp):
         sp_dict["stepsize"] = float(stepsize)
         sp_dict["metric"] = metric.tolist()[0]
         
-        print(type(sp_dict["metric"]), sp_dict["metric"])
         file.write(json.dumps(sp_dict))
 
 
@@ -117,6 +121,7 @@ def my_save(sp, hp, burned_draws, draws, sampler_type, sampler):
         hp.model_num,
         f"{sampler_type}_{param_hash}",
         f"chain_{hp.chain_num:02d}",
+        f"run_{hp.global_seed:02d}"
     )
     Path(dir_name).mkdir(parents=True, exist_ok=True)
     

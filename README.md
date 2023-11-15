@@ -4,7 +4,7 @@
 
 Experiments with DRGHMC, a novel sampler that excells at high-curvature densities. Preliminary results are promising but more experiments are needed.
 
-This is my work done at the Flatiron Institue under [Chirag Modi](https://modichirag.github.io/), [Edward Roualdes](https://roualdes.us/), and [Bob Carpenter](https://bob-carpenter.github.io/). This repository is forked from the [Bayes-Kit](https://github.com/flatironinstitute/bayes-kit) repository, where I implemented DRGHMC with beautiful, well-documented code (IMO :grin:).
+This is my work done at the Flatiron Institue with [Chirag Modi](https://modichirag.github.io/), [Edward Roualdes](https://roualdes.us/), and [Bob Carpenter](https://bob-carpenter.github.io/). This repository is forked from the [Bayes-Kit](https://github.com/flatironinstitute/bayes-kit) repository, where I implemented DRGHMC.
 
 ## Relevant papers :open_file_folder: :
 - [Hamiltonian Monte Carlo (HMC) Introduction](https://arxiv.org/pdf/1701.02434.pdf)

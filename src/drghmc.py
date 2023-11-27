@@ -396,7 +396,7 @@ class DrGhmcDiag:
 
         self._log_density_gradient_cache = [self._log_density_gradient_cache.pop()]
         self._rho = -self._rho  # negate momentum unconditionally for generalized HMC
-        self._acceptance_list.append(acceptance_flag)  # diagnostic
+        self._acceptance_list.append(acceptance_flag)  # diagnostic  
         return self._theta, cur_logp
 
     def accept(

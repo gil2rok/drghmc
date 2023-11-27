@@ -9,7 +9,7 @@ import pandas as pd
 from .hashing import get_hash_str
 
 
-def call_counter(f):
+def grad_counter(f):
     @functools.wraps(f)
     def wrapper(*args, **kwargs):
         wrapper.calls += 1
@@ -17,24 +17,6 @@ def call_counter(f):
 
     wrapper.calls = 0
     return wrapper
-
-def grad_counter(f):
-    @functools.wraps(f)
-    def wrapper(*args, **kwargs):
-        lp, grad = f(*args, **kwargs)
-        if grad is not None:
-            wrapper.calls += 1
-        return (lp, grad)
-
-    wrapper.calls = 0
-    return wrapper
-
-def get_param_hash(sp, sampler_type, burn_in, chain_length):
-    hash1 = get_hash_str(sp)
-    hash2 = sampler_type
-    hash3 = str(burn_in)
-    hash4 = str(chain_length)
-    return get_hash_str(hash1 + hash2 + hash3 + hash4)
 
 
 def acceptance_helper(acceptances, proposal_num):
@@ -68,93 +50,77 @@ def compute_acceptance(sampler, sampler_type, burn_in, sp):
     return acceptances, burned_acceptances, accept_list, accept_rate_total
 
 
-def stan_save(nuts, sampler_type, hp):
-    draws = nuts.draws()  # [num samples, num chains, num params]
-    stepsize = nuts.step_size
-    metric = nuts.metric
-    draws_df = nuts.draws_pd()
-    
-    param_hash = get_param_hash("", sampler_type, 0, 1000)
-    dir_name = os.path.join(
+def stan_save(nuts, hp, summary_stats):
+    save_path = os.path.join(
         hp.save_dir,
-        hp.model_num,
-        f"{sampler_type}_{param_hash}",
-        f"chain_{hp.chain_num:02d}",
-        f"run_{hp.global_seed:02d}"
+        hp.posterior,
+        f"nuts",
+        f"chain_{hp.chain:02d}"
     )
-    Path(dir_name).mkdir(parents=True, exist_ok=True)
+    Path(save_path).mkdir(parents=True, exist_ok=True)
     
-    np.save(os.path.join(dir_name, "draws"), draws.astype(np.float16))
-    draws_df.to_csv(os.path.join(dir_name, "draws.csv"), sep="\t")
+    draws_df = nuts.draws_pd()
+    draws_df.to_csv(os.path.join(save_path, "draws.csv"), sep="\t", float_format="%.16f")
     
     # save hyper parameters as json
-    with open(os.path.join(dir_name, "hyper_params.json"), "w") as file:
-        file.write(json.dumps(hp._asdict()))
+    # with open(os.path.join(dir_name, "hyper_params.json"), "w") as file:
+        # file.write(json.dumps(hp._asdict()))
         
     # save sampler parameters as json
-    with open(os.path.join(dir_name, "sampler_params.json"), "w") as file:
-        sp_dict = {}
-        sp_dict["sampler_type"] = sampler_type
-        sp_dict["stepsize"] = float(stepsize)
-        sp_dict["metric"] = metric.tolist()[0]
-        
+    with open(os.path.join(save_path, "params.json"), "w") as file:
+        sp_dict = {
+            "sampler_type": "nuts",
+            "stepsize": float(nuts.step_size),
+            "inv_metric": nuts.metric.tolist()[0],
+            "grad_evals": draws_df["n_leapfrog__"].sum(),
+        }
         file.write(json.dumps(sp_dict))
+        
+    with open(os.path.join(save_path, "summary_stats.json"), "w") as file:
+        file.write(json.dumps(summary_stats))
 
 
-def my_save(sp, hp, burned_draws, draws, sampler_type, sampler):
-    # burn in and chain length
-    burn_in = (
-        int(hp.burn_in_gradeval / sp.steps)
-        if type(sp.steps) is int
-        else hp.burn_in_gradeval
-    )
-    chain_len = (
-        int(hp.chain_length_gradeval / sp.steps)
-        if type(sp.steps) is int
-        else hp.chain_length_gradeval
-    )
-
-    # create directory
-    param_hash = get_param_hash(sp, sampler_type, burn_in, chain_len)
-    dir_name = os.path.join(
+def bayeskit_save(sp, hp, draws, sampler, idx, summary_stats): 
+    #  my_save(sp, hp, draws, idx)
+    save_path = os.path.join(
         hp.save_dir,
-        hp.model_num,
-        f"{sampler_type}_{param_hash}",
-        f"chain_{hp.chain_num:02d}",
-        f"run_{hp.global_seed:02d}"
+        hp.posterior,
+        f"{sp.sampler_type}_{idx:02d}",
+        f"chain_{hp.chain:02d}",
     )
-    Path(dir_name).mkdir(parents=True, exist_ok=True)
-    
-    accept_tuple = compute_acceptance(sampler, sampler_type, burn_in, sp)
+    Path(save_path).mkdir(parents=True, exist_ok=True)
     
     # save burned draws, draws, and acceptances as numpy arrays
-    np.save(os.path.join(dir_name, "burned_draws"), burned_draws.astype(np.float16))
-    np.save(os.path.join(dir_name, "draws"), draws.astype(np.float16))
+    # np.save(os.path.join(save_path, "burned_draws"), burned_draws.astype(np.float16))
+    np.savetxt(os.path.join(save_path, "draws.csv"), draws.astype(np.float16), delimiter="\t")
     
-    if accept_tuple is not None:
-        acceptances, burned_acceptances = accept_tuple[0], accept_tuple[1]
-        np.save(os.path.join(dir_name, "burned_acceptances"), burned_acceptances)
-        np.save(os.path.join(dir_name, "acceptances"), acceptances)
+    with open(os.path.join(save_path, "params.json"), "w") as file:
+        json_dict = {"grad_evals": sampler._model.log_density_gradient.calls}
+        file.write(json.dumps(json_dict))
+        
+    with open(os.path.join(save_path, "summary_stats.json"), "w") as file:
+        file.write(json.dumps(summary_stats))
+        
+    
+    # accept_tuple = compute_acceptance(sampler, sp.sampler_type, burn_in, sp)
+    # if accept_tuple is not None:
+    #     acceptances, burned_acceptances = accept_tuple[0], accept_tuple[1]
+    #     np.save(os.path.join(save_path, "burned_acceptances"), burned_acceptances)
+    #     np.save(os.path.join(save_path, "acceptances"), acceptances)
 
     # save hyper parameters as json
-    with open(os.path.join(dir_name, "hyper_params.json"), "w") as file:
-        file.write(json.dumps(hp._asdict()))
+    # with open(os.path.join(save_path, "hyper_params.json"), "w") as file:
+    #     file.write(json.dumps(hp._asdict()))
 
     # save sampler parameters as json
-    with open(os.path.join(dir_name, "sampler_params.json"), "w") as file:
-        sp_dict = sp._asdict()
-        sp_dict["sampler_type"] = sampler_type
-        sp_dict["burn_in"] = burn_in
-        sp_dict["chain_length"] = chain_len
-        sp_dict["grad_evals"] = sampler._model.log_density_gradient.calls
-        sp_dict["density_evals"] = (
-            sampler._model.log_density_gradient.calls + sampler._model.log_density.calls
-        )
+    
+        # if accept_tuple is not None:
+        #     accept_list, accept_rate_total = accept_tuple[2], accept_tuple[3]
+        #     sp_dict["accept_total"] = accept_rate_total
+        #     for i in range(sp.num_proposals):
+        #         sp_dict[f"accept_{i}"] = accept_list[i]
         
-        if accept_tuple is not None:
-            accept_list, accept_rate_total = accept_tuple[2], accept_tuple[3]
-            sp_dict["accept_total"] = accept_rate_total
-            for i in range(sp.num_proposals):
-                sp_dict[f"accept_{i}"] = accept_list[i]
-        
-        file.write(json.dumps(sp_dict))
+    if hp.chain == 0:
+        with open(os.path.join(save_path, "..", "sampler_params.json"), "w") as file:
+            sp_dict = sp._asdict()
+            file.write(json.dumps(sp_dict))

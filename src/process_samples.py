@@ -1,194 +1,15 @@
 import argparse
 import asyncio
-import csv
 import itertools
 import json
 import nest_asyncio
 import os
-import zipfile
+from zipfile import ZipFile
 
-import numpy as np
-import pandas as pd
 import polars as pl
 from posteriordb import PosteriorDatabase
 
-
-def get_nuts_path(data_path):
-    nuts_path = None
-    for dir in os.listdir(data_path):
-        if dir.startswith("nuts"):
-            nuts_path = os.path.join(data_path, dir, "chain_00")
-            break
-
-    if not nuts_path:
-        raise ValueError("No NUTS directory found in {}".format(data_path))
-    return nuts_path
-
-
-def get_number_of_columns(csv_file_path):
-    """
-    Get the number of columns in a tab-separated CSV file.
-
-    Args:
-        csv_file_path (str): Path to the tab-separated CSV file.
-
-    Returns:
-        int: Number of columns in the CSV file.
-    """
-    num_columns = 0
-
-    try:
-        with open(csv_file_path, "r") as file:
-            csv_reader = csv.reader(file, delimiter="\t")
-            first_row = next(csv_reader, None)
-            if first_row:
-                num_columns = len(first_row)
-    except Exception as e:
-        print(f"An error occurred: {str(e)}")
-
-    return num_columns
-
-
-def create_nuts_df(data_path):
-    # Initialize an empty list to store data frames from each run
-    nuts_path = get_nuts_path(data_path)
-    nuts_list = []
-    num_columns = None
-
-    # Iterate through the run directories
-    for run_dir in os.listdir(nuts_path):
-        if run_dir.startswith("run_"):
-            run_number = int(run_dir.split("_")[1])
-            csv_path = os.path.join(nuts_path, run_dir, "draws.csv")
-
-            if os.path.exists(csv_path):
-                # Add a "run" column with the run number
-                df = pd.read_csv(
-                    csv_path, sep="\t", usecols=["stepsize__", "n_leapfrog__"]
-                )
-                df["run"] = run_number
-
-                # Get the total number of columns in the data frame
-                if not num_columns:
-                    num_columns = get_number_of_columns(csv_path)
-
-                # Add the remaining columns by index starting from 11 (0-based)
-                remaining_columns = list(range(11, num_columns))
-                new_col_names = [f"p{idx}" for idx, val in enumerate(remaining_columns)]
-
-                # Read the CSV file again for the remaining columns
-                remaining_df = pd.read_csv(
-                    csv_path, sep="\t", usecols=remaining_columns
-                )
-
-                # Combine the dataframes by concatenating them
-                combined_df = pd.concat([df, remaining_df], axis=1)
-                nuts_list.append(combined_df)
-
-    # Concatenate all data frames into a single data frame
-    nuts_df = pd.concat(nuts_list, ignore_index=True)
-    return nuts_df
-
-
-def process_nuts_df(nuts_df):
-    # Step 1: Rename columns
-    nuts_df.rename(
-        columns={"stepsize__": "stepsize", "n_leapfrog__": "stepcount"}, inplace=True
-    )
-
-    # Step 2: Rename arbitrary columns as p1, p2, etc.
-    for i in range(3, len(nuts_df.columns)):
-        nuts_df.rename(columns={nuts_df.columns[i]: f"p{i-3}"}, inplace=True)
-
-    # Step 3: Convert 'run' and 'stepcount' to unsigned int with minimal precision
-    nuts_df["run"] = pd.to_numeric(nuts_df["run"], downcast="unsigned")
-    nuts_df["stepcount"] = pd.to_numeric(nuts_df["stepcount"], downcast="unsigned")
-
-    # Step 4: Convert remaining columns to the smallest float data type
-    for col in nuts_df.columns[3:]:
-        nuts_df[col] = pd.to_numeric(nuts_df[col], downcast="float")
-
-    # Step 5: Reorder columns with 'run' as the first column, 'stepsize' as the second column, and 'stepcount' as the third column
-    column_order = ["run", "stepsize", "stepcount"] + list(
-        nuts_df.columns.difference(["run", "stepsize", "stepcount"])
-    )
-    nuts_df = nuts_df[column_order]
-
-    # Step 6: Add a new column "sampler" with the value "NUTS" for every row
-    nuts_df.insert(0, "sampler", "nuts")
-
-    # convert "stepsize" column to float32 in Pandas dataframe
-    nuts_df = nuts_df.astype({"stepsize": "float32"})
-    nuts_df = pl.from_pandas(nuts_df)
-
-    return nuts_df
-
-
-def diff(first, second):
-    second = set(second)
-    return [item for item in first if item not in second]
-
-
-def load_draws(file_path):
-    draws_array = np.load(file_path)
-    draws_df = pl.from_numpy(draws_array)
-
-    # rename columns as "p1", "p2", etc.
-    draws_df = draws_df.rename({c: f"p{idx}" for idx, c in enumerate(draws_df.columns)})
-    return draws_df
-
-
-def load_sampler_params(file_path, num_draws):
-    sampler_params_df = pl.read_json(file_path)
-
-    sampler_params_df = sampler_params_df.select(
-        [
-            "init_stepsize",
-            "reduction_factor",
-            "steps",
-            "dampening",
-            "num_proposals",
-            "probabilistic",
-            "sampler_type",
-            "grad_evals",
-        ]
-    )
-
-    schema = {
-        "init_stepsize": pl.Float32,
-        "reduction_factor": pl.UInt8,
-        "steps": pl.Utf8,
-        "dampening": pl.Float32,
-        "num_proposals": pl.UInt8,
-        "probabilistic": pl.Boolean,
-        "grad_evals": pl.UInt32,
-    }
-
-    sampler_params_df = sampler_params_df.with_columns(
-        pl.col(c).cast(dtype) for c, dtype in schema.items()
-    )
-
-    # Use concat to vertically stack the original DataFrame n times
-    sampler_params_repeated = pl.concat([sampler_params_df for _ in range(num_draws)])
-
-    return sampler_params_repeated
-
-
-def load_hyper_params(file_path, num_draws):
-    hyper_params_df = pl.read_json(file_path)
-
-    hyper_params_df = hyper_params_df.select("global_seed").rename(
-        {"global_seed": "run"}
-    )
-
-    schema = {"run": pl.UInt8}
-    hyper_params_df = hyper_params_df.with_columns(
-        pl.col(c).cast(dtype) for c, dtype in schema.items()
-    )
-
-    hyper_params_repeated = pl.concat([hyper_params_df for _ in range(num_draws)])
-
-    return hyper_params_repeated
+from .utils.summary_stats import get_summary_stats
 
 
 def background(f):
@@ -201,49 +22,40 @@ def background(f):
 @background
 def helper(root, dir_name):
     data = []
+    if (
+        dir_name.startswith("drhmc")
+        or dir_name.startswith("drghmc")
+        or dir_name.startswith("ghmc")
+    ):
+        chain_dir = os.path.join(root, dir_name)
+        _, chains, _ = next(os.walk(chain_dir))
 
-    if dir_name.startswith("drhmc") or dir_name.startswith("drghmc"):
-        for run_dir in os.listdir(os.path.join(root, dir_name, "chain_00")):
-            if run_dir.startswith("run_"):
-                draws_path = os.path.join(
-                    root, dir_name, "chain_00", run_dir, "draws.npy"
-                )
-                sampler_params_path = os.path.join(
-                    root, dir_name, "chain_00", run_dir, "sampler_params.json"
-                )
-                hyper_params_path = os.path.join(
-                    root, dir_name, "chain_00", run_dir, "hyper_params.json"
-                )
+        for idx, chain in enumerate(chains):
+            chain_path = os.path.join(chain_dir, chain)
 
-                if (
-                    os.path.exists(draws_path)
-                    and os.path.exists(sampler_params_path)
-                    and os.path.exists(hyper_params_path)
-                ):
-                    # Step 1
-                    draws_df = load_draws(draws_path)
-                    num_draws = draws_df.shape[0]
+            summary_stats_packed = json.load(
+                open(os.path.join(chain_path, "summary_stats.json"))
+            )
+            sampler_params = json.load(
+                open(os.path.join(chain_dir, "sampler_params.json"))
+            )
 
-                    # Step 2
-                    sampler_params_df = load_sampler_params(
-                        sampler_params_path, num_draws
-                    )
+            summary_stats = {}
+            for k, v in summary_stats_packed.items():
+                for param_idx, param in enumerate(v):
+                    new_key = k + f"_p{param_idx}"
+                    new_val = summary_stats_packed[k][param_idx]
+                    summary_stats[new_key] = new_val
 
-                    # Step 3
-                    hyper_params_df = load_hyper_params(hyper_params_path, num_draws)
-
-                    # Combine dataframes by repeating sampler_params and hyper_params for each row in draws_df
-                    combined_df = pl.concat(
-                        [hyper_params_df, sampler_params_df, draws_df], how="horizontal"
-                    )
-
-                    data.append(combined_df)
+            sampler_id = {"sampler": dir_name, "chain": idx}
+            row = sampler_id | sampler_params | summary_stats
+            data.append(row)
     return data
 
 
-def samples_to_polars_df(data_path):
+def get_bk_df(data_path, posterior):
     data = []
-    root, dirs, _ = next(os.walk(data_path))
+    root, dirs, _ = next(os.walk(os.path.join(data_path, "raw", posterior)))
 
     nest_asyncio.apply()
     loop = asyncio.get_event_loop()
@@ -251,93 +63,164 @@ def samples_to_polars_df(data_path):
     data = loop.run_until_complete(looper)
     data = list(itertools.chain.from_iterable(data))
 
-    samples = pl.concat(data)
-    samples = samples.rename(
-        {
-            "sampler_type": "sampler",
-            "init_stepsize": "stepsize",
-            "steps": "stepcount",
-        }
-    )
-
-    # if "stepcount" column contains "const_traj_len", convert it to 0
-    samples = samples.with_columns(
-        pl.when(pl.col("stepcount") == "const_traj_len")
-        .then(0)
-        .otherwise(pl.col("stepcount"))
-        .alias("stepcount")
-    )
-
-    samples = samples.with_columns(pl.col("stepcount").cast(pl.UInt16))
-
+    samples = pl.DataFrame(data)
     return samples
 
 
-def get_ref_draws_json(posterior_name, posterior_path):
-    try:  # load posterior from custom model
-        path = os.path.join(posterior_path, posterior_name)
-        ref_draws_path = os.path.join(path, f"{posterior_name}.ref_draws.json.zip")
-        ref_draws = json.load(
-            zipfile.ZipFile(ref_draws_path).open(f"{posterior_name}.ref_draws.json")
+def get_nuts_df(data_path, posterior):
+    nuts_path = os.path.join(data_path, "raw", posterior, "nuts")
+    _, chains, _ = next(os.walk(nuts_path))
+
+    data = []
+    for idx, chain in enumerate(chains):
+        chain_path = os.path.join(nuts_path, chain)
+
+        summary_stats_packed = json.load(
+            open(os.path.join(chain_path, "summary_stats.json"))
         )
 
-    except:  # try to load posterior from PDB
+        summary_stats = {}
+        for k, v in summary_stats_packed.items():
+            for param_idx, param in enumerate(v):
+                new_key = k + f"_p{param_idx}"
+                new_val = summary_stats_packed[k][param_idx]
+                summary_stats[new_key] = new_val
+
+        sampler_id = {"sampler": "nuts", "sampler_type": "nuts", "chain": idx}
+        row = sampler_id | summary_stats
+        data.append(row)
+    return pl.DataFrame(data)
+
+
+def get_ref_draws(posterior_path, posterior_name):
+    """Returns list of dictionaries, where each dict represents an individual chain.
+    Each dict has keys as parameter names and values as a list of parameter draws.
+    """
+    try:  # try to load posterior from PDB
         path = os.path.join(posterior_path, "posteriordb/posterior_database")
         pdb = PosteriorDatabase(path)
-        posterior = pdb.posterior(posterior_name)
+        posterior = pdb.get_posterior(posterior_name)
         ref_draws = posterior.reference_draws()
+
+    except:  #  load posterior from custom model
+        path = os.path.join(posterior_path, posterior_name)
+        ref_draws_path = os.path.join(path, f"{posterior_name}.ref_draws.json.zip")
+        ref_draws = json.loads(
+            ZipFile(ref_draws_path)
+            .read(f"{posterior_name}.ref_draws.json")
+            .decode("utf-8")
+        )
 
     return ref_draws
 
 
-def json_to_polars(ref_draws):
+def get_ref_df(posterior_path, posterior_name):
     data = []
-    for idx, run in enumerate(ref_draws):
-        cur_df = pl.DataFrame(run)
-        cur_df = cur_df.rename({c: f"p{idx}" for idx, c in enumerate(cur_df.columns)})
+    ref_draws = get_ref_draws(
+        posterior_path, posterior_name
+    )  # [num_chains  x num_params]
 
-        cur_df = cur_df.with_columns(pl.col(c).cast(pl.Float32) for c in cur_df.columns)
-        cur_df = cur_df.with_columns(pl.lit(idx).alias("run"))
-        cur_df = cur_df.with_columns(pl.col("run").cast(pl.UInt8))
+    for chain in ref_draws:
+        summary_stats = {}
+        for param_idx, params in enumerate(chain.values()):
+            summary_stats_packed = get_summary_stats(params)
 
-        data.append(cur_df)
+            for k, v in summary_stats_packed.items():
+                new_key = k + f"_p{param_idx}"
+                summary_stats[new_key] = v
 
-    # return Polars dataframe and add a column called "sampler" with value "reference"
-    return pl.concat(data).with_columns(pl.lit("ref").alias("sampler"))
+        sampler_id = {"sampler": "ref", "sampler_type": "ref", "chain": param_idx}
+        row = sampler_id | summary_stats
+        data.append(row)
+
+    return pl.DataFrame(data)
 
 
-def main(posterior_name, raw_data_path, posterior_path):
-    dr_samplers = samples_to_polars_df(raw_data_path)
-    nuts = process_nuts_df(create_nuts_df(raw_data_path))
-    ref_draws = json_to_polars(get_ref_draws_json(posterior_name, posterior_path))
+def merge_dataframes(bk_df, nuts_df, ref_df):
+    samples_df = pl.concat([bk_df, nuts_df, ref_df], how="diagonal")
 
-    # Combine the two dataframes
-    samples = pl.concat([dr_samplers, nuts, ref_draws], how="diagonal")
-    samples = samples.sort("run")
+    schema = {
+        "sampler": pl.Categorical,
+        "chain": pl.UInt8,
+        "sampler_type": pl.Categorical,
+        "init_stepsize": pl.Float32,
+        "reduction_factor": pl.UInt8,
+        "steps": pl.Utf8,
+        "dampening": pl.Float32,
+        "num_proposals": pl.UInt8,
+        "probabilistic": pl.Boolean,
+    }
 
-    # convert the "sampler" column to categorical
-    samples = samples.with_columns(pl.col("sampler").cast(pl.Categorical))
-
-    samples = samples.select(
-        ["run", "sampler", "stepcount"]
-        + diff(samples.columns, ["run", "sampler", "stepcount"])
+    samples_df = samples_df.with_columns(
+        pl.col(c).cast(dtype) for c, dtype in schema.items()
     )
 
-    # save samples dataframe in compact format
+    return samples_df
 
-    path = os.path.join("data/processed/", posterior_name, "samples.parquet")
-    if not os.path.exists(os.path.dirname(path)):
-        os.makedirs(os.path.dirname(path))
-    samples.write_parquet(path, compression_level=22)
+
+def create_df(posterior, data_path, posterior_path):
+    """ Create dataframe containing summary statistics of reference draws, NUTS draws, 
+    and Bayes-Kit sampler draws (e.g. GHMC, DRHMC, and DRGHMC).
+    
+    These summary statistics include the mean and squared mean of every parameter, 
+    as well as the and number of gradient evaluations. Crucially, these summary 
+    statistics are computed only from the draws and monitoring the samplers that 
+    generate them.
+
+    Args:
+        posterior: name of posterior
+        data_path: path to data directory containing draws
+        posterior_path: path to posterior directory containing reference draws
+
+    Returns:
+        samples_df: dataframe containing mean, squared mean, and gradient evaluations 
+        for reference draws, draws from NUTS, and draws from Bayes-Kit samplers
+    """
+    
+    bk_df = get_bk_df(data_path, posterior)
+    nuts_df = get_nuts_df(data_path, posterior)
+    ref_df = get_ref_df(posterior_path, posterior)
+
+    samples_df = merge_dataframes(bk_df, nuts_df, ref_df)
+    return samples_df
+
+
+def process_df(samples_df):
+    """ Transform summary statistics into more useful statistics.
+    
+    Use reference draws to transform 
+        - mean --> squared error of mean
+        - mean squared --> squared error of mean squared
+        - gradient evaluations --> effective sample size / gradient evaluations 
+        
+    Then drop reference draws from dataframe.
+    
+    Args:
+        samples_df: dataframe containing mean, squared mean, and gradient evaluations
+    """
+    
+    
+    
+
+def main(posterior, data_path, posterior_path):
+    samples_df = create_df(posterior, data_path, posterior_path)
+
+    save_path = os.path.join(data_path, "processed", posterior, "samples.parquet")
+    os.makedirs(os.path.dirname(save_path), exist_ok=True)
+    samples_df.write_parquet(save_path, compression_level=22)
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--posterior_name", type=str, help="PDB model number")
+    parser.add_argument(
+        "--posterior",
+        type=str,
+        help="name of a posterior, specified by a Stan model and data",
+    )
     args = parser.parse_args()
-    
-    posterior_name = args.posterior_name
-    raw_data_path = os.path.join("data", "raw", posterior_name)
+
+    posterior = args.posterior
+    data_path = os.path.join("data")
     posterior_path = os.path.join("posteriors")
 
-    main(posterior_name, raw_data_path, posterior_path)
+    main(posterior, data_path, posterior_path)

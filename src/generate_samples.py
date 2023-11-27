@@ -74,7 +74,7 @@ def ghmc_runner(hp):
     sampler_param_grid = ParameterGrid(
         {
             "sampler_type": ["ghmc"],
-            "init_stepsize": [1e-2, 5e-2, 1e-1, 2e-1],
+            "init_stepsize": [0.1, 0.5, 0.9],
             "dampening": [0.01, 0.05, 0.1, 0.2],
         }
     )
@@ -91,7 +91,7 @@ def drhmc_runner(hp):
     sampler_param_grid = ParameterGrid(
         {
             "sampler_type": ["drhmc"],
-            "init_stepsize": [0.12063],
+            "init_stepsize": [0.9],
             "reduction_factor": [2, 4],
             "steps": [70, 35],
             "num_proposals": [2, 3, 4],
@@ -111,7 +111,7 @@ def drghmc_runner(hp):
     sampler_param_grid = ParameterGrid(
         {
             "sampler_type": ["drghmc"],
-            "init_stepsize": [0.12063],
+            "init_stepsize": [10, 5, 2, 0.9],
             "reduction_factor": [2, 4],
             "steps": ["const_traj_len", 1],
             "dampening": [0.01, 0.05, 0.1, 0.2, 0.3],
@@ -148,7 +148,7 @@ if __name__ == "__main__":
         bridgestan_dir="../../.bridgestan/bridgestan-2.1.1/",
     )
     
-    stan_nuts_runner(hp)
-    # ghmc_runner(hp)
-    # drhmc_runner(hp)
-    # drghmc_runner(hp)
+    # stan_nuts_runner(hp)
+    ghmc_runner(hp)
+    drhmc_runner(hp)
+    drghmc_runner(hp)

@@ -32,11 +32,13 @@ def stan_nuts(hp):
     seed = int(str(hp.global_seed) + str(hp.chain))
     
     return model, data, seed, init, inv_metric
-
+        
 
 def ghmc(hp, sp):
     model, ref_draws = get_posterior(hp.posterior, hp.posterior_dir, "bayeskit")
+    stan_metric, stan_stepsize, stan_steps = get_stan_params(hp)
 
+    init_stepsize = stan_stepsize * sp.init_stepsize
     stepsize = [
         sp.init_stepsize * (sp.reduction_factor**-k) for k in range(sp.num_proposals)
     ]
@@ -66,7 +68,7 @@ def drhmc(hp, sp):
     model, ref_draws = get_posterior(hp.posterior, hp.posterior_dir, "bayeskit")
     stan_metric, stan_stepsize, stan_steps = get_stan_params(hp)
     
-    init_stepsize = stan_stepsize if stan_stepsize else sp.init_stepsize
+    init_stepsize = stan_stepsize * sp.init_stepsize
     stepsize = [
         init_stepsize * (sp.reduction_factor**-k) for k in range(sp.num_proposals)
     ]
@@ -103,7 +105,7 @@ def drghmc(hp, sp):
     model, ref_draws = get_posterior(hp.posterior, hp.posterior_dir, "bayeskit")
     stan_metric, stan_stepsize, stan_steps = get_stan_params(hp)
     
-    init_stepsize = stan_stepsize if stan_stepsize else sp.init_stepsize
+    init_stepsize = stan_stepsize * sp.init_stepsize
     stepsize = [
         init_stepsize * (sp.reduction_factor**-k) for k in range(sp.num_proposals)
     ]

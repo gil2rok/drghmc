@@ -35,7 +35,9 @@ class BayesKitModel(GradModel):
 
 def bayes_kit_posterior(model_name, posterior_path):
     try:  # try to load posterior from PDB
+        posterior_origin = "pdb"
         path = os.path.join(posterior_path, "posteriordb/posterior_database")
+        
         pdb = PosteriorDatabase(path)
         posterior = pdb.posterior(model_name)
         
@@ -44,7 +46,9 @@ def bayes_kit_posterior(model_name, posterior_path):
         ref_draws = posterior.reference_draws()
         
     except:  # load posterior from custom model
+        posterior_origin = "custom"
         path = os.path.join(posterior_path, model_name)
+        
         model_path = os.path.join(path, f"{model_name}.stan")
         
         data_path = os.path.join(path, f"{model_name}.data.json")
@@ -54,7 +58,7 @@ def bayes_kit_posterior(model_name, posterior_path):
         ref_draws = json.load(zipfile.ZipFile(ref_draws_path).open(f"{model_name}.ref_draws.json"))
         
     model = BayesKitModel(model_path, json.dumps(data))
-    return model, ref_draws
+    return model, ref_draws, posterior_origin
 
 
 def stan_posterior(model_name, posterior_path):
@@ -78,7 +82,7 @@ def stan_posterior(model_name, posterior_path):
         ref_draws = json.load(zipfile.ZipFile(ref_draws_path).open(f"{model_name}.ref_draws.json"))
         
     model = CmdStanModel(stan_file=model_path)
-    return model, data, ref_draws
+    return model, data, ref_draws, posterior_origin
 
 
 def get_posterior(model_name, posterior_path, method):

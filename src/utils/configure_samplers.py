@@ -19,37 +19,67 @@ def get_stan_params(hp):
     return metric, stepsize, num_steps_p90
 
 
-def stan_nuts(hp):
-    model, data, ref_draws = get_posterior(hp.posterior, hp.posterior_dir, "stan")
+def get_metric(ref_draws, chain_num, sampler_type, posterior_origin):
+    num_chains = len(ref_draws)
+    if posterior_origin == "custom" and not chain_num < num_chains:
+        raise ValueError(f"Invalid chain number {chain_num} for {posterior_origin} posterior")
+    
+    param_dict = ref_draws[chain_num % num_chains]
+    inv_metric = list()
+    
+    for param_name, param_value in param_dict.items():
+        inv_metric.append(1 / np.std(param_value))
+        
+    return inv_metric
 
-    init, metric = dict(), list()
-    for param_name, param_value in ref_draws[hp.chain].items():
-        init[param_name] = param_value[-1]
-        metric.append(np.std(param_value))
-    inv_metric = {"inv_metric": [1 / el for el in metric]}
+
+def get_init(ref_draws, chain_num, sampler_type, posterior_origin):
+    num_chains = len(ref_draws)
+    if posterior_origin == "custom" and not chain_num < num_chains:
+        raise ValueError(f"Invalid chain number {chain_num} for {posterior_origin} posterior")
+    
+    param_dict = ref_draws[chain_num % num_chains]
+    init = dict()
+    
+    for param_name, param_value in param_dict.items():
+        init[param_name] = param_value[-1 - (chain_num // num_chains) * 10]
+        
+    if sampler_type == "bk": # bayeskit expects numpy array for initialization, not dict
+        init = np.array(list(init.values()), dtype=np.float64)
+        return init
+    elif sampler_type != "stan":
+        raise ValueError(f"Invalid method {method}")
+      
+    return init
+
+
+def stan_nuts(hp):
+    model, data, ref_draws, posterior_origin = get_posterior(hp.posterior, hp.posterior_dir, "stan")
 
     # seed depends on global seed and chain number
     seed = int(str(hp.global_seed) + str(hp.chain))
     
+    init = get_init(ref_draws, hp.chain, "stan", posterior_origin)
+
+    inv_metric = get_metric(ref_draws, hp.chain, "stan", posterior_origin)
+
     return model, data, seed, init, inv_metric
         
 
 def ghmc(hp, sp):
-    model, ref_draws = get_posterior(hp.posterior, hp.posterior_dir, "bayeskit")
+    model, ref_draws, posterior_origin = get_posterior(hp.posterior, hp.posterior_dir, "bayeskit")
     stan_metric, stan_stepsize, stan_steps = get_stan_params(hp)
 
     init_stepsize = stan_stepsize * sp.init_stepsize
     stepsize = [
         sp.init_stepsize * (sp.reduction_factor**-k) for k in range(sp.num_proposals)
     ]
-    # seed depends on global seed and chain number
+    
     seed = int(str(hp.global_seed) + str(hp.chain))
-
-    init, metric = dict(), list()
-    for param_name, param_value in ref_draws[hp.chain].items():
-        init[param_name] = param_value[-1]
-        metric.append(np.std(param_value))
-    init = np.array(list(init.values()), dtype=np.float64)
+    
+    metric = stan_metric
+    
+    init = get_init(ref_draws, hp.chain, "bk", posterior_origin)
 
     return DrGhmcDiag(
         model=model,
@@ -78,15 +108,12 @@ def drhmc(hp, sp):
     steps = [
         int(traj_len / stepsize[k]) for k in range(sp.num_proposals)
     ]  # const traj len
-    # seed depends on global seed and chain number
+    
     seed = int(str(hp.global_seed) + str(hp.chain))
-
-    init, metric = dict(), list()
-    for param_name, param_value in ref_draws[hp.chain].items():
-        init[param_name] = param_value[-1]
-        metric.append(np.std(param_value))
-    init = np.array(list(init.values()), dtype=np.float64)
+    
     metric = stan_metric
+    
+    init = get_init(ref_draws, hp.chain, "bk", posterior_origin)
 
     return DrGhmcDiag(
         model=model,
@@ -121,15 +148,11 @@ def drghmc(hp, sp):
     else:
         raise ValueError("Invalid value for DRGHMC steps")
 
-    # seed depends on global seed and chain number
     seed = int(str(hp.global_seed) + str(hp.chain))
 
-    init, metric = dict(), list()
-    for param_name, param_value in ref_draws[hp.chain].items():
-        init[param_name] = param_value[-1]
-        metric.append(np.std(param_value))
-    init = np.array(list(init.values()), dtype=np.float64)
     metric = stan_metric
+    
+    init = get_init(ref_draws, hp.chain, "bk", posterior_origin)
 
     return DrGhmcDiag(
         model=model,

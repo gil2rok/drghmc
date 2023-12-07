@@ -60,7 +60,7 @@ def stan_save(nuts, hp, summary_stats):
     Path(save_path).mkdir(parents=True, exist_ok=True)
     
     draws_df = nuts.draws_pd()
-    draws_df.to_csv(os.path.join(save_path, "draws.csv"), sep="\t", float_format="%.16f")
+    draws_df.to_csv(os.path.join(save_path, "draws.csv"), sep="\t", float_format="%.64f")
     
     # save hyper parameters as json
     # with open(os.path.join(dir_name, "hyper_params.json"), "w") as file:
@@ -70,9 +70,9 @@ def stan_save(nuts, hp, summary_stats):
     with open(os.path.join(save_path, "params.json"), "w") as file:
         sp_dict = {
             "sampler_type": "nuts",
-            "stepsize": float(nuts.step_size),
+            "init_stepsize": float(nuts.step_size),
             "inv_metric": nuts.metric.tolist()[0],
-            "grad_evals": draws_df["n_leapfrog__"].sum(),
+            "grad_evals": int(draws_df["n_leapfrog__"].sum()),
         }
         file.write(json.dumps(sp_dict))
         
@@ -92,7 +92,7 @@ def bayeskit_save(sp, hp, draws, sampler, idx, summary_stats):
     
     # save burned draws, draws, and acceptances as numpy arrays
     # np.save(os.path.join(save_path, "burned_draws"), burned_draws.astype(np.float16))
-    np.savetxt(os.path.join(save_path, "draws.csv"), draws.astype(np.float16), delimiter="\t")
+    np.savetxt(os.path.join(save_path, "draws.csv"), draws.astype(np.float64), delimiter="\t")
     
     with open(os.path.join(save_path, "params.json"), "w") as file:
         json_dict = {"grad_evals": sampler._model.log_density_gradient.calls}

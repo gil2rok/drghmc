@@ -2,6 +2,7 @@ import json, os, zipfile
 
 import bridgestan as bs
 from cmdstanpy import CmdStanModel
+import numpy as np
 from posteriordb import PosteriorDatabase
 
 from .typing import GradModel
@@ -21,7 +22,12 @@ class BayesKitModel(GradModel):
         return self.bsmodel.log_density(x)
     
     def log_density_gradient(self, x):
-        return self.bsmodel.log_density_gradient(x)
+        log_density, gradient = self.bsmodel.log_density_gradient(x)
+        
+        if np.isnan(log_density) or np.isnan(gradient).any():
+            raise ValueError("NaN values in log density or gradient")
+        
+        return (log_density, gradient)
     
     def unconstrain(self, x):
         return self.bsmodel.param_unconstrain(x)
@@ -63,7 +69,9 @@ def bayes_kit_posterior(model_name, posterior_path):
 
 def stan_posterior(model_name, posterior_path):
     try:  # try to load posterior from PDB
+        posterior_origin = "pdb"
         path = os.path.join(posterior_path, "posteriordb/posterior_database/")
+        
         pdb = PosteriorDatabase(path)
         posterior = pdb.posterior(model_name)
         
@@ -72,7 +80,9 @@ def stan_posterior(model_name, posterior_path):
         ref_draws = posterior.reference_draws()
         
     except:  # load posterior from custom model
+        posterior_origin = "custom"
         path = os.path.join(posterior_path, model_name)
+        
         model_path = os.path.join(path, f"{model_name}.stan")
         
         data_path = os.path.join(path, f"{model_name}.data.json")

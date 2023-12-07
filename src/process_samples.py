@@ -29,9 +29,12 @@ def helper(root, dir_name):
     ):
         chain_dir = os.path.join(root, dir_name)
         _, chains, _ = next(os.walk(chain_dir))
+        chains.sort()
 
         for idx, chain in enumerate(chains):
             chain_path = os.path.join(chain_dir, chain)
+            
+            params = json.load(open(os.path.join(chain_path, "params.json")))
 
             summary_stats_packed = json.load(
                 open(os.path.join(chain_path, "summary_stats.json"))
@@ -44,11 +47,11 @@ def helper(root, dir_name):
             for k, v in summary_stats_packed.items():
                 for param_idx, param in enumerate(v):
                     new_key = k + f"_p{param_idx}"
-                    new_val = summary_stats_packed[k][param_idx]
+                    new_val = summary_stats_packed[k][param_idx]  # is this equivalent to new_val = param?
                     summary_stats[new_key] = new_val
 
             sampler_id = {"sampler": dir_name, "chain": idx}
-            row = sampler_id | sampler_params | summary_stats
+            row = sampler_id | sampler_params | params | summary_stats
             data.append(row)
     return data
 
@@ -74,6 +77,9 @@ def get_nuts_df(data_path, posterior):
     data = []
     for idx, chain in enumerate(chains):
         chain_path = os.path.join(nuts_path, chain)
+        
+        params = json.load(open(os.path.join(chain_path, "params.json")))
+        params.pop("inv_metric", None)
 
         summary_stats_packed = json.load(
             open(os.path.join(chain_path, "summary_stats.json"))
@@ -86,8 +92,8 @@ def get_nuts_df(data_path, posterior):
                 new_val = summary_stats_packed[k][param_idx]
                 summary_stats[new_key] = new_val
 
-        sampler_id = {"sampler": "nuts", "sampler_type": "nuts", "chain": idx}
-        row = sampler_id | summary_stats
+        sampler_id = {"sampler": "nuts", "chain": idx}
+        row = sampler_id | params | summary_stats
         data.append(row)
     return pl.DataFrame(data)
 
@@ -120,7 +126,7 @@ def get_ref_df(posterior_path, posterior_name):
         posterior_path, posterior_name
     )  # [num_chains  x num_params]
 
-    for chain in ref_draws:
+    for idx, chain in enumerate(ref_draws):
         summary_stats = {}
         for param_idx, params in enumerate(chain.values()):
             summary_stats_packed = get_summary_stats(params)
@@ -129,7 +135,7 @@ def get_ref_df(posterior_path, posterior_name):
                 new_key = k + f"_p{param_idx}"
                 summary_stats[new_key] = v
 
-        sampler_id = {"sampler": "ref", "sampler_type": "ref", "chain": param_idx}
+        sampler_id = {"sampler": "ref", "sampler_type": "ref", "chain": idx}
         row = sampler_id | summary_stats
         data.append(row)
 
@@ -149,6 +155,7 @@ def merge_dataframes(bk_df, nuts_df, ref_df):
         "dampening": pl.Float32,
         "num_proposals": pl.UInt8,
         "probabilistic": pl.Boolean,
+        "grad_evals": pl.UInt32,
     }
 
     samples_df = samples_df.with_columns(
@@ -158,7 +165,7 @@ def merge_dataframes(bk_df, nuts_df, ref_df):
     return samples_df
 
 
-def create_df(posterior, data_path, posterior_path):
+def main(posterior, data_path, posterior_path):
     """ Create dataframe containing summary statistics of reference draws, NUTS draws, 
     and Bayes-Kit sampler draws (e.g. GHMC, DRHMC, and DRGHMC).
     
@@ -182,28 +189,6 @@ def create_df(posterior, data_path, posterior_path):
     ref_df = get_ref_df(posterior_path, posterior)
 
     samples_df = merge_dataframes(bk_df, nuts_df, ref_df)
-    return samples_df
-
-
-def process_df(samples_df):
-    """ Transform summary statistics into more useful statistics.
-    
-    Use reference draws to transform 
-        - mean --> squared error of mean
-        - mean squared --> squared error of mean squared
-        - gradient evaluations --> effective sample size / gradient evaluations 
-        
-    Then drop reference draws from dataframe.
-    
-    Args:
-        samples_df: dataframe containing mean, squared mean, and gradient evaluations
-    """
-    
-    
-    
-
-def main(posterior, data_path, posterior_path):
-    samples_df = create_df(posterior, data_path, posterior_path)
 
     save_path = os.path.join(data_path, "processed", posterior, "samples.parquet")
     os.makedirs(os.path.dirname(save_path), exist_ok=True)

@@ -6,6 +6,8 @@ from numpy.typing import ArrayLike
 
 from .utils.typing import DrawAndLogP, GradModel, Seed, VectorType
 
+np.seterr(all="warn")
+
 
 class DrGhmcDiag:
     """(Probabilistic) Delayed Rejection Generalized Hamiltonian Monte Carlo sampler.
@@ -278,7 +280,8 @@ class DrGhmcDiag:
         rho_mid = rho + 0.5 * step_size * np.multiply(self._metric, grad).squeeze()
         theta += step_size * rho_mid
 
-        for _ in range(step_count - 1):
+        for i in range(step_count - 1):
+            print(i)
             logp, grad = self._model.log_density_gradient(theta)
             rho_mid += step_size * np.multiply(self._metric, grad).squeeze()
             theta += step_size * rho_mid
@@ -365,8 +368,10 @@ class DrGhmcDiag:
         )
         cur_logp = self.joint_logp(self._theta, self._rho)
         cur_hastings, reject_logp = 0.0, 0.0
-
+        
+        print("Cur Draw:\t", cur_logp, "\n\t", self._theta, "\n\t", self._rho)
         for k in range(self._max_proposals):
+            print("Attempt: ", k)
             acceptance_flag = -(k + 1)  # diagnostic
             retry_logp = self.retry_logp(reject_logp)
             if not np.log(self._rng.uniform()) < retry_logp:
@@ -383,7 +388,8 @@ class DrGhmcDiag:
             accept_logp, prop_logp = self.accept(
                 theta_prop, rho_prop, k, cur_hastings, cur_logp
             )
-
+            print("Acceptance Prob:\t", np.exp(accept_logp))
+            print("Proposed Draw:\t", prop_logp, "\n\t", theta_prop, "\n\t", rho_prop)
             if np.log(self._rng.uniform()) < accept_logp:
                 self._theta, self._rho = theta_prop, rho_prop
                 cur_logp = prop_logp
@@ -394,8 +400,8 @@ class DrGhmcDiag:
             cur_hastings += reject_logp
             self._log_density_gradient_cache.pop()  # cache set in leapfrog() function
 
-        self._log_density_gradient_cache = [self._log_density_gradient_cache.pop()]
         self._rho = -self._rho  # negate momentum unconditionally for generalized HMC
+        self._log_density_gradient_cache = [self._log_density_gradient_cache.pop()]
         self._acceptance_list.append(acceptance_flag)  # diagnostic  
         return self._theta, cur_logp
 
@@ -436,13 +442,14 @@ class DrGhmcDiag:
             try:
                 theta_ghost, rho_ghost = self.proposal_map(theta_prop, rho_prop, i)
             except Exception as e:
-                print("Error evaluating log density, rejecting proposed draw\n", e)
+                print("Error evaluating log density, rejecting ghost draw\n", e)
                 return (-np.inf, prop_logp)
             
             accept_logp, _ = self.accept(
                 theta_ghost, rho_ghost, i, prop_hastings, prop_logp
             )
 
+            # should I do an approximate equality check bc of floating point error
             if accept_logp == 0:  # early stopping to avoid -inf in np.log1p
                 self._log_density_gradient_cache.pop()  # cache set in leapfrog() function
                 return -np.inf, prop_logp
@@ -459,4 +466,5 @@ class DrGhmcDiag:
             + (prop_hastings - cur_hastings)
             + (prop_retry_logp - cur_retry_logp)
         )
-        return min(0, accept_frac), prop_logp
+
+        return np.minimum(0, accept_frac), prop_logp

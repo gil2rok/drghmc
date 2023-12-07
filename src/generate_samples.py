@@ -62,7 +62,7 @@ def stan_nuts_runner(hp):
         seed=seed,
         inits=init,
         metric=inv_metric,
-        #  adapt_init_phase=hp.burn_in  # b/c init from reference draw
+        adapt_init_phase=hp.burn_in  # b/c init from reference draw
     )
     
     draws = nuts_fit.draws(concat_chains=True)[:, 7:]
@@ -74,12 +74,14 @@ def ghmc_runner(hp):
     sampler_param_grid = ParameterGrid(
         {
             "sampler_type": ["ghmc"],
-            "init_stepsize": [0.1, 0.5, 0.9],
+            "init_stepsize": [0.1, 0.5, 1.0, 2.0],
             "dampening": [0.01, 0.05, 0.1, 0.2],
         }
     )
 
-    for idx, sampler_params in enumerate(tqdm(sampler_param_grid, desc="ghmc")):
+    for idx, sampler_params in enumerate(
+        tqdm(sampler_param_grid, desc=f"[{MPI.COMM_WORLD.Get_rank():02d}]\tghmc")
+    ):
         sp = SamplerParamsTuple(**sampler_params)
         sampler = ghmc(hp, sp)
         burned_draws, draws = generate_draws(sampler, hp)
@@ -91,15 +93,17 @@ def drhmc_runner(hp):
     sampler_param_grid = ParameterGrid(
         {
             "sampler_type": ["drhmc"],
-            "init_stepsize": [0.9],
+            "init_stepsize": [1.0, 2.0, 5.0],
             "reduction_factor": [2, 4],
-            "steps": [70, 35],
+            "steps": [0.9],
             "num_proposals": [2, 3, 4],
             "probabilistic": [False],
         }
     )
 
-    for idx, sampler_params in enumerate(tqdm(sampler_param_grid, desc="drhmc")):
+    for idx, sampler_params in enumerate(
+        tqdm(sampler_param_grid, desc=f"[{MPI.COMM_WORLD.Get_rank():02d}]\tdrhmc")
+    ):
         sp = SamplerParamsTuple(**sampler_params)
         sampler = drhmc(hp, sp)
         burned_draws, draws = generate_draws(sampler, hp)
@@ -111,16 +115,18 @@ def drghmc_runner(hp):
     sampler_param_grid = ParameterGrid(
         {
             "sampler_type": ["drghmc"],
-            "init_stepsize": [10, 5, 2, 0.9],
+            "init_stepsize": [1.0, 2.0, 5.0, 10.0],
             "reduction_factor": [2, 4],
             "steps": ["const_traj_len", 1],
-            "dampening": [0.01, 0.05, 0.1, 0.2, 0.3],
+            "dampening": [0.01, 0.05, 0.1, 0.25],
             "num_proposals": [2, 3, 4],
             "probabilistic": [False],
         }
     )
 
-    for idx, sampler_params in enumerate(tqdm(sampler_param_grid, desc="drghmc")):
+    for idx, sampler_params in enumerate(
+        tqdm(sampler_param_grid, desc=f"[{MPI.COMM_WORLD.Get_rank():02d}]\tdrghmc")
+    ):
         sp = SamplerParamsTuple(**sampler_params)
         sampler = drghmc(hp, sp)
         burned_draws, draws = generate_draws(sampler, hp)
@@ -148,7 +154,7 @@ if __name__ == "__main__":
         bridgestan_dir="../../.bridgestan/bridgestan-2.1.1/",
     )
     
-    # stan_nuts_runner(hp)
+    stan_nuts_runner(hp)
     ghmc_runner(hp)
     drhmc_runner(hp)
     drghmc_runner(hp)

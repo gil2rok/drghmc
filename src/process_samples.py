@@ -9,7 +9,7 @@ from zipfile import ZipFile
 import polars as pl
 from posteriordb import PosteriorDatabase
 
-from .utils.summary_stats import get_summary_stats
+# from .utils.summary_stats import get_summary_stats
 
 
 def background(f):
@@ -26,6 +26,7 @@ def helper(root, dir_name):
         dir_name.startswith("drhmc")
         or dir_name.startswith("drghmc")
         or dir_name.startswith("ghmc")
+        or dir_name.startswith("hmc")
     ):
         chain_dir = os.path.join(root, dir_name)
         _, chains, _ = next(os.walk(chain_dir))
@@ -92,8 +93,13 @@ def get_nuts_df(data_path, posterior):
                 new_val = summary_stats_packed[k][param_idx]
                 summary_stats[new_key] = new_val
 
-        sampler_id = {"sampler": "nuts", "chain": idx}
+        sampler_id = {"sampler": "nuts", "chain": idx, "reduction_factor": 0, "steps": "nuts", "dampening": 1.0, "num_proposals": 1, "probabilistic": False}
         row = sampler_id | params | summary_stats
+        
+        # init stepsize is defined as multiples of Nuts' stepsize. although have access
+        # to Nuts's actual stepsize, a factor of 1 is more helpful for later analysis
+        row["init_stepsize"] = 1.0
+        
         data.append(row)
     return pl.DataFrame(data)
 
@@ -105,7 +111,7 @@ def get_ref_draws(posterior_path, posterior_name):
     try:  # try to load posterior from PDB
         path = os.path.join(posterior_path, "posteriordb/posterior_database")
         pdb = PosteriorDatabase(path)
-        posterior = pdb.get_posterior(posterior_name)
+        posterior = pdb.posterior(posterior_name)
         ref_draws = posterior.reference_draws()
 
     except:  #  load posterior from custom model
@@ -120,30 +126,30 @@ def get_ref_draws(posterior_path, posterior_name):
     return ref_draws
 
 
-def get_ref_df(posterior_path, posterior_name):
-    data = []
-    ref_draws = get_ref_draws(
-        posterior_path, posterior_name
-    )  # [num_chains  x num_params]
+# def get_ref_df(posterior_path, posterior_name):
+#     data = []
+#     ref_draws = get_ref_draws(
+#         posterior_path, posterior_name
+#     )  # [num_chains  x num_params]
 
-    for idx, chain in enumerate(ref_draws):
-        summary_stats = {}
-        for param_idx, params in enumerate(chain.values()):
-            summary_stats_packed = get_summary_stats(params)
+#     for idx, chain in enumerate(ref_draws):
+#         summary_stats = {}
+#         for param_idx, params in enumerate(chain.values()):
+#             summary_stats_packed = get_summary_stats(params)
 
-            for k, v in summary_stats_packed.items():
-                new_key = k + f"_p{param_idx}"
-                summary_stats[new_key] = v
+#             for k, v in summary_stats_packed.items():
+#                 new_key = k + f"_p{param_idx}"
+#                 summary_stats[new_key] = v
 
-        sampler_id = {"sampler": "ref", "sampler_type": "ref", "chain": idx}
-        row = sampler_id | summary_stats
-        data.append(row)
+#         sampler_id = {"sampler": "ref", "sampler_type": "ref", "chain": idx}
+#         row = sampler_id | summary_stats
+#         data.append(row)
 
-    return pl.DataFrame(data)
+#     return pl.DataFrame(data)
 
 
-def merge_dataframes(bk_df, nuts_df, ref_df):
-    samples_df = pl.concat([bk_df, nuts_df, ref_df], how="diagonal")
+def merge_dataframes(bk_df, nuts_df):
+    samples_df = pl.concat([bk_df, nuts_df], how="diagonal")
 
     schema = {
         "sampler": pl.Categorical,
@@ -186,9 +192,10 @@ def main(posterior, data_path, posterior_path):
     
     bk_df = get_bk_df(data_path, posterior)
     nuts_df = get_nuts_df(data_path, posterior)
-    ref_df = get_ref_df(posterior_path, posterior)
+    # ref_df = get_ref_df(posterior_path, posterior)
 
-    samples_df = merge_dataframes(bk_df, nuts_df, ref_df)
+    # samples_df = merge_dataframes(bk_df, nuts_df, ref_df)
+    samples_df = merge_dataframes(bk_df, nuts_df)
 
     save_path = os.path.join(data_path, "processed", posterior, "samples.parquet")
     os.makedirs(os.path.dirname(save_path), exist_ok=True)

@@ -99,6 +99,36 @@ def ghmc(hp, sp):
     )
 
 
+def hmc(hp, sp):
+    model, ref_draws, posterior_origin = get_posterior(hp.posterior, hp.posterior_dir, "bayeskit")
+    stan_metric, stan_stepsize, stan_steps = get_stan_params(hp)
+
+    if sp.init_stepsize == 0:
+        stepsize = [0.01]
+    else:
+        stepsize = [stan_stepsize * sp.init_stepsize]
+
+    steps = [int(np.percentile(stan_steps, sp.steps * 100))]
+    
+    seed = int(str(hp.global_seed) + str(hp.chain))
+
+    metric = stan_metric
+
+    init = get_init(ref_draws, hp.chain, "bk", posterior_origin)
+
+    return DrGhmcDiag(
+        model=model,
+        max_proposals=sp.num_proposals,
+        leapfrog_step_sizes=stepsize,
+        leapfrog_step_counts=steps,
+        damping=sp.dampening,
+        # metric_diag=metric,
+        init=init,
+        seed=seed,
+        prob_retry=sp.probabilistic,
+    )
+
+
 def drhmc(hp, sp):
     model, ref_draws, posterior_origin = get_posterior(hp.posterior, hp.posterior_dir, "bayeskit")
     stan_metric, stan_stepsize, stan_steps = get_stan_params(hp)
@@ -123,7 +153,7 @@ def drhmc(hp, sp):
         max_proposals=sp.num_proposals,
         leapfrog_step_sizes=stepsize,
         leapfrog_step_counts=steps,
-        damping=1.0,
+        damping=sp.dampening,
         # metric_diag=metric,
         init=init,
         seed=seed,

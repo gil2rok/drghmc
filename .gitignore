@@ -1,5 +1,5 @@
 ### Start of my custom gitignore files ###
-data/logs/
+logs/
 data/raw/
 data/processed/
 

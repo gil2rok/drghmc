@@ -83,6 +83,7 @@ class DrGhmcDiag:
         # recursively computing the log acceptance probability) and across draws
         self._log_density_gradient_cache: list[Tuple[float, VectorType]] = []
         self._acceptance_list = []  # diagnostic
+        self._proposal_nans, self._ghost_nans = 0, 0  # diagnostic
         self._validate_arguments()
 
     def _validate_arguments(self) -> None:
@@ -280,8 +281,7 @@ class DrGhmcDiag:
         rho_mid = rho + 0.5 * step_size * np.multiply(self._metric, grad).squeeze()
         theta += step_size * rho_mid
 
-        for i in range(step_count - 1):
-            print(i)
+        for _ in range(step_count - 1):
             logp, grad = self._model.log_density_gradient(theta)
             rho_mid += step_size * np.multiply(self._metric, grad).squeeze()
             theta += step_size * rho_mid
@@ -369,9 +369,9 @@ class DrGhmcDiag:
         cur_logp = self.joint_logp(self._theta, self._rho)
         cur_hastings, reject_logp = 0.0, 0.0
         
-        print("Cur Draw:\t", cur_logp, "\n\t", self._theta, "\n\t", self._rho)
+        # print("Cur Draw:\t", cur_logp, "\n\t", self._theta, "\n\t", self._rho)
         for k in range(self._max_proposals):
-            print("Attempt: ", k)
+            # print("Attempt: ", k)
             acceptance_flag = -(k + 1)  # diagnostic
             retry_logp = self.retry_logp(reject_logp)
             if not np.log(self._rng.uniform()) < retry_logp:
@@ -381,6 +381,7 @@ class DrGhmcDiag:
                 theta_prop, rho_prop = self.proposal_map(self._theta, self._rho, k)
             except Exception as e:
                 print("Error evaluating log density, rejecting proposed draw\n", e)
+                self._proposal_nans += 1  # diagnostic
                 self._log_density_gradient_cache = [
                     self._log_density_gradient_cache[0]
                 ]
@@ -388,8 +389,8 @@ class DrGhmcDiag:
             accept_logp, prop_logp = self.accept(
                 theta_prop, rho_prop, k, cur_hastings, cur_logp
             )
-            print("Acceptance Prob:\t", np.exp(accept_logp))
-            print("Proposed Draw:\t", prop_logp, "\n\t", theta_prop, "\n\t", rho_prop)
+            # print("Acceptance Prob:\t", np.exp(accept_logp))
+            # print("Proposed Draw:\t", prop_logp, "\n\t", theta_prop, "\n\t", rho_prop)
             if np.log(self._rng.uniform()) < accept_logp:
                 self._theta, self._rho = theta_prop, rho_prop
                 cur_logp = prop_logp
@@ -443,6 +444,7 @@ class DrGhmcDiag:
                 theta_ghost, rho_ghost = self.proposal_map(theta_prop, rho_prop, i)
             except Exception as e:
                 print("Error evaluating log density, rejecting ghost draw\n", e)
+                self._ghost_nans += 1  # diagnostic
                 return (-np.inf, prop_logp)
             
             accept_logp, _ = self.accept(

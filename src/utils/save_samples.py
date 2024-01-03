@@ -95,7 +95,12 @@ def bayeskit_save(sp, hp, draws, sampler, idx, summary_stats):
     np.savetxt(os.path.join(save_path, "draws.csv"), draws.astype(np.float64), delimiter="\t")
     
     with open(os.path.join(save_path, "params.json"), "w") as file:
-        json_dict = {"grad_evals": sampler._model.log_density_gradient.calls}
+        json_dict = {
+            "grad_evals": sampler._model.log_density_gradient.calls,
+            "proposal_nans": sampler._proposal_nans,
+            "ghost_nans": sampler._ghost_nans,
+        }
+        
         file.write(json.dumps(json_dict))
         
     with open(os.path.join(save_path, "summary_stats.json"), "w") as file:

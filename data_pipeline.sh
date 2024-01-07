@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=funnel10                     # Job name
+#SBATCH --job-name=stochastic_volatility        # Job name
 #SBATCH --nodes=1                               # Number of nodes
 #SBATCH --ntasks=100                            # Number of tasks aka processes aka chains/runs
 #SBATCH --output=logs/slurm_%A_%a.out           # Standard output file (%A is the job ID, %a is the task ID)

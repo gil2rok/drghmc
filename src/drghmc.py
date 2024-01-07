@@ -5,8 +5,9 @@ import numpy as np
 from numpy.typing import ArrayLike
 
 from .utils.typing import DrawAndLogP, GradModel, Seed, VectorType
+from utils.save_samples import grad_counter
 
-np.seterr(all="warn")
+# np.seterr(all="warn")
 
 
 class DrGhmcDiag:
@@ -64,6 +65,9 @@ class DrGhmcDiag:
                 Defaults to True.
         """
         self._model = model
+        self._model.log_density_gradient = grad_counter(
+            self._model.log_density_gradient
+        )
         self._dim = self._model.dims()
         self._max_proposals = max_proposals
         self._leapfrog_step_sizes = leapfrog_step_sizes
@@ -84,6 +88,9 @@ class DrGhmcDiag:
         self._log_density_gradient_cache: list[Tuple[float, VectorType]] = []
         self._acceptance_list = []  # diagnostic
         self._proposal_nans, self._ghost_nans = 0, 0  # diagnostic
+        self._uturn_start = self._theta  # diagnostic
+        self._uturn_trajectory_len = 0  # diagnostic
+        self._uturn_list = []  # diagnostic
         self._validate_arguments()
 
     def _validate_arguments(self) -> None:
@@ -226,6 +233,28 @@ class DrGhmcDiag:
         """
         return self.sample()
 
+    def _uturn_check(self, k):
+        """Check if a U-turn has been made and if so, record its trajectory length.
+        
+        A U-turn occurs when theta reverses direction and starts moving back towards 
+        its starting point. This indicates the optimal trajectory length is reached and
+        is a property NUTS is automatically tuned to optimize. To diagnose this 
+        sampler, one compare its U-turn trajectory lengths to those of NUTS.
+
+        Args:
+            k: proposal number (for leapfrog step size and step count)
+        """
+        cur_step_count = self._leapfrog_step_counts[k]
+        cur__step_size = self._leapfrog_step_sizes[k]
+        self._uturn_trajectory_len += cur_step_count * cur__step_size
+        
+        turn_criteria = np.dot(self._uturn_start - self._theta, self._rho)
+        
+        if turn_criteria < 0:    
+            self._uturn_list.append(self._uturn_trajectory_len)
+            self._uturn_trajectory_len = 0
+            self._uturn_start = self._theta
+    
     def joint_logp(self, theta: VectorType, rho: VectorType) -> float:
         """Return the log density of draw (theta, rho) for the unnormalized Gibbs pdf.
 
@@ -369,9 +398,7 @@ class DrGhmcDiag:
         cur_logp = self.joint_logp(self._theta, self._rho)
         cur_hastings, reject_logp = 0.0, 0.0
         
-        # print("Cur Draw:\t", cur_logp, "\n\t", self._theta, "\n\t", self._rho)
         for k in range(self._max_proposals):
-            # print("Attempt: ", k)
             acceptance_flag = -(k + 1)  # diagnostic
             retry_logp = self.retry_logp(reject_logp)
             if not np.log(self._rng.uniform()) < retry_logp:
@@ -389,11 +416,11 @@ class DrGhmcDiag:
             accept_logp, prop_logp = self.accept(
                 theta_prop, rho_prop, k, cur_hastings, cur_logp
             )
-            # print("Acceptance Prob:\t", np.exp(accept_logp))
-            # print("Proposed Draw:\t", prop_logp, "\n\t", theta_prop, "\n\t", rho_prop)
+            
             if np.log(self._rng.uniform()) < accept_logp:
                 self._theta, self._rho = theta_prop, rho_prop
                 cur_logp = prop_logp
+                self._uturn_check(k)  # diagnostic
                 acceptance_flag = k + 1  # diagnostic
                 break
 

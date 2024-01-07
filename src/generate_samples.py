@@ -44,10 +44,6 @@ def generate_draws(sampler, hp):
     # TODO: add multi-processing here
     burned_draws = np.asanyarray([sampler.sample()[0] for _ in range(hp.burn_in)])
 
-    sampler._model.log_density_gradient = grad_counter(
-        sampler._model.log_density_gradient
-    )
-
     # TODO: add multi-processing here
     draws = np.asanyarray([sampler.sample()[0] for _ in range(hp.grad_evals)])
     
@@ -56,6 +52,7 @@ def generate_draws(sampler, hp):
 
 def stan_nuts_runner(hp):
     model, data, seed, init, inv_metric = stan_nuts(hp)
+    print(inv_metric)
     nuts_fit = model.sample(
         data=data,
         chains=1,
@@ -63,6 +60,7 @@ def stan_nuts_runner(hp):
         inits=init,
         metric=inv_metric,
         adapt_init_phase=hp.burn_in,  # b/c init from reference draw
+        show_console=True,
     )
 
     draws = nuts_fit.draws(concat_chains=True)[:, 7:]
@@ -113,8 +111,8 @@ def drhmc_runner(hp):
     sampler_param_grid = ParameterGrid(
         {
             "sampler_type": ["drhmc"],
-            "init_stepsize": [1.0, 2.0, 4.0, 8.0],
-            "reduction_factor": [2, 4],
+            "init_stepsize": [0.5, 1.0, 2.0, 4.0, 8.0],
+            "reduction_factor": [2, 4, 8],
             "steps": [0.9],
             "num_proposals": [2, 3, 4],
             "probabilistic": [False],
@@ -135,8 +133,8 @@ def drghmc_runner(hp):
     sampler_param_grid = ParameterGrid(
         {
             "sampler_type": ["drghmc"],
-            "init_stepsize": [1.0, 2.0, 5.0, 8.0],
-            "reduction_factor": [2, 4],
+            "init_stepsize": [0.5, 1.0, 2.0, 5.0, 8.0],
+            "reduction_factor": [2, 4, 8],
             "steps": ["const_traj_len", 1],
             "dampening": [0.01, 0.05, 0.1, 0.5],
             "num_proposals": [2, 3, 4],

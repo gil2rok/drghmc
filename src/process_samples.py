@@ -46,6 +46,10 @@ def helper(root, dir_name):
 
             summary_stats = {}
             for k, v in summary_stats_packed.items():
+                if k == "tail":
+                    summary_stats[k] = v
+                    continue
+                
                 for param_idx, param in enumerate(v):
                     new_key = k + f"_p{param_idx}"
                     new_val = summary_stats_packed[k][param_idx]  # is this equivalent to new_val = param?
@@ -88,6 +92,10 @@ def get_nuts_df(data_path, posterior):
 
         summary_stats = {}
         for k, v in summary_stats_packed.items():
+            if k == "tail":
+                    summary_stats[k] = v
+                    continue
+                
             for param_idx, param in enumerate(v):
                 new_key = k + f"_p{param_idx}"
                 new_val = summary_stats_packed[k][param_idx]

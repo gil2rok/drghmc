@@ -74,9 +74,11 @@ def stan_posterior(model_name, posterior_path):
         
         pdb = PosteriorDatabase(path)
         posterior = pdb.posterior(model_name)
-        
+        print(pdb)
+        print(posterior)
         model_path = posterior.model.code_file_path("stan")
         data = posterior.data.values()
+        print(model_path)
         ref_draws = posterior.reference_draws()
         
     except:  # load posterior from custom model

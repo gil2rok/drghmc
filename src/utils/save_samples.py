@@ -103,6 +103,13 @@ def bayeskit_save(sp, hp, draws, sampler, idx, summary_stats):
         
         file.write(json.dumps(json_dict))
         
+    with open(os.path.join(save_path, "uturns.json"), "w") as file:
+        json_dict = {
+            "uturns": sampler._uturn_list
+        }
+        
+        file.write(json.dumps(json_dict))
+        
     with open(os.path.join(save_path, "summary_stats.json"), "w") as file:
         file.write(json.dumps(summary_stats))
         

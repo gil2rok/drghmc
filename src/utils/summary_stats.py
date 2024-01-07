@@ -53,6 +53,5 @@ def get_summary_stats(draws, hp):
     summary_stats = {
         "se1": squared_error(draws, ref_draws), 
         "se2": squared_error(np.square(draws), np.square(ref_draws)),
-        "tail": reach_tail(draws),
     }
     return summary_stats

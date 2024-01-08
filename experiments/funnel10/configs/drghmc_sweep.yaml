@@ -1,0 +1,31 @@
+name: drghmc_sweep
+project: dr-funnel10
+entity: gilad-turok
+program: src/runners/run_drghmc.py
+method: grid
+description: hyper-param sweep for drghmc sampler for funnel10 posterior
+
+parameters:
+  # project parameters
+  posterior:
+    value: "funnel10"
+  chains:
+    values: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+  burn_in:
+    value: 0
+  grad_evals:
+    value: 100000
+  seed:
+    value: 0
+
+  # sampler parameters
+  init_stepsize:
+    values: [0.5, 1.0, 2.0, 5.0, 8.0]
+  reduction_factor:
+    values: [2, 4, 8]
+  steps:
+    values: ["const_traj_len", 1]
+  dampening:
+    values: [0.01, 0.05, 0.1, 0.5]
+  num_proposals:
+    values: [2, 3, 4]

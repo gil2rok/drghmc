@@ -1,4 +1,5 @@
 import json, os, zipfile
+from functools import lru_cache
 
 import bridgestan as bs
 from cmdstanpy import CmdStanModel
@@ -74,11 +75,8 @@ def stan_posterior(model_name, posterior_path):
         
         pdb = PosteriorDatabase(path)
         posterior = pdb.posterior(model_name)
-        print(pdb)
-        print(posterior)
         model_path = posterior.model.code_file_path("stan")
         data = posterior.data.values()
-        print(model_path)
         ref_draws = posterior.reference_draws()
         
     except:  # load posterior from custom model
@@ -96,7 +94,7 @@ def stan_posterior(model_name, posterior_path):
     model = CmdStanModel(stan_file=model_path)
     return model, data, ref_draws, posterior_origin
 
-
+@lru_cache(maxsize=128)
 def get_posterior(model_name, posterior_path, method):
     if method == "stan":
         return stan_posterior(model_name, posterior_path)

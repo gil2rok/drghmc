@@ -1,6 +1,7 @@
 ### Start of my custom gitignore files ###
-logs/
 data/
+logs/
+.old_data/
 wandb/
 
 # I also commented out lines about .vscode files for launcher.json and settings.json

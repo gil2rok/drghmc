@@ -1,5 +1,4 @@
 name: drghmc_sweep
-project: dr-funnel
 entity: gilad-turok
 program: src/run_drghmc.py
 method: grid
@@ -12,28 +11,32 @@ command:
 
 parameters:
   # experiment parameters
-  project:
-    value: "dr-funnel"
+  experiment:
+    value: "funnel10"
+  sampler_type:
+    value: "drghmc"
   posterior:
     value: "funnel10"
   posterior_dir:
     value: "posteriors"
   seed:
     value: 1234
+  generate_history:
+    value: True
+  generate_metrics:
+    value: True
 
   # sampler hyper-parameters
-  sampler_type:
-    value: "drghmc"
   burn_in:
     value: 0
-  grad_evals:
+  gradient_budget:
     value: 1000000
 
   # sampler parameters
   chain:
     values: [0, 1, 2, 3, 4]
   step_count_method:
-    values: ["const_traj_len", "const_step_count"]
+    values: ["const_traj_length", "const_step_count"]
   step_size_factor:
     values: [0.5, 1.0, 2.0, 5.0, 8.0]
   max_proposals:

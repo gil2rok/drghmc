@@ -5,7 +5,7 @@ import numpy as np
 from numpy.typing import ArrayLike
 
 from utils.typing import DrawAndLogP, GradModel, Seed, VectorType
-from utils.save_samples import grad_counter
+from utils.configure_samplers import grad_counter
 
 # np.seterr(all="warn")
 

@@ -1,9 +1,18 @@
+import functools
+
 import numpy as np
 
 from utils.posteriors import get_posterior
 
 
+def grad_counter(f):
+    @functools.wraps(f)
+    def wrapper(*args, **kwargs):
+        wrapper.calls += 1
+        return f(*args, **kwargs)
 
+    wrapper.calls = 0
+    return wrapper
 
 
 def get_metric(ref_draws, chain_num, sampler_type, posterior_origin):

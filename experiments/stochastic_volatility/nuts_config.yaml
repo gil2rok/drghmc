@@ -1,0 +1,39 @@
+name: nuts_sweep
+entity: gilad-turok
+program: src/run_nuts.py
+method: grid
+description: hyper-param sweep for stan sampler for stochastic volatility posterior
+command:
+  - ${env}
+  - ${interpreter}
+  - ${program}
+  - ${args_no_boolean_flags}
+
+parameters:
+  # experiment parameters
+  experiment:
+    value: "stochastic_volatility"
+  sampler_type:
+    value: "nuts"
+  posterior:
+    value: "stochastic_volatility"
+  posterior_dir:
+    value: "posteriors"
+  seed:
+    value: 1234
+  generate_history:
+    value: True
+  generate_metrics:
+    value: True
+  
+  # sampler hyper-parameters
+  burn_in:
+    value: 0
+  gradient_budget:
+    value: 1000000
+  
+  # sampler parameters
+  chain:
+    values: [0, 1, 2, 3, 4]
+  metric:
+    values: ["identity", "diag_cov"]

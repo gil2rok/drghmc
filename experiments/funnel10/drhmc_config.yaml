@@ -1,5 +1,4 @@
 name: drhmc_sweep
-project: dr-funnel
 entity: gilad-turok
 program: src/run_drhmc.py
 method: grid
@@ -12,21 +11,25 @@ command:
 
 parameters:
   # experiment parameters
-  project:
-    value: "dr-funnel"
+  experiment:
+    value: "funnel10"
+  sampler_type:
+    value: "drhmc"
   posterior:
     value: "funnel10"
   posterior_dir:
     value: "posteriors"
   seed:
     value: 1234
+  generate_history:
+    value: True
+  generate_metrics:
+    value: True
 
   # sampler hyper-parameters
-  sampler_type:
-    value: "drhmc"
   burn_in:
     value: 0
-  grad_evals:
+  gradient_budget:
     value: 1000000
 
   # sampler parameters

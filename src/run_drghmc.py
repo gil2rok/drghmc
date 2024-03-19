@@ -1,131 +1,100 @@
 from collections import defaultdict
+import logging
 import os
 
+import hydra
 import numpy as np
-import seaborn as sns
+from omegaconf import OmegaConf, open_dict
 import wandb
 
-from samplers.drghmc import DrGhmcDiag
-from utils.argument_parsers import drghmc_argument_parser
-from utils.posteriors_new import get_model_path, get_data_path, get_init
-from utils.models import BayesKitModel, grad_counter
-from utils.nuts_utils import get_nuts_step_size
-from utils.metrics import compute_metrics
-from utils.save_utils import save_to_npz, get_data_dir, save_fingerprint
+from .samplers.drghmc import DrGhmcDiag
+from .utils.delayed_rejection import compute_accept_prob
+from .utils.logging import logging_context, log_history_to_wandb
+from .utils.metrics import compute_metrics
+from .utils.models import BayesKitModel, grad_counter
+from .utils.nuts_utils import get_nuts_step_size, get_nuts_metric
+from .utils.posteriors_new import get_model_path, get_data_path, get_init
+from .utils.save_utils import save_dict_to_npz, get_history
+from .utils.summary_utils import write_summary
+
+os.environ["WANDB__SERVICE_WAIT"] = "300"
 
 
-def configure_sampler(config):
-    model_path = get_model_path(config.posterior, config.posterior_dir)
-    data_path = get_data_path(config.posterior, config.posterior_dir)
-    
+def configure_sampler(sampler, posterior):
+    model_path = get_model_path(posterior.name, posterior.dir)
+    data_path = get_data_path(posterior.name, posterior.dir)
+
     model = BayesKitModel(model_path=model_path, data_path=data_path)
     model.log_density_gradient = grad_counter(model.log_density_gradient)
 
-    if config.step_size_factor:
-        nuts_step_size = get_nuts_step_size(config)
-        init_step_size = nuts_step_size * config.step_size_factor
-    elif config.step_size:
-        init_step_size = config.step_size
+    if sampler.params.step_size_factor:
+        nuts_step_size = get_nuts_step_size(sampler, posterior)
+        init_step_size = nuts_step_size * sampler.params.step_size_factor
+    elif sampler.params.step_size:
+        init_step_size = sampler.params.step_size
 
     step_sizes = [
-        init_step_size * (config.reduction_factor**-k)
-        for k in range(config.max_proposals)
+        init_step_size * (sampler.params.reduction_factor**-k)
+        for k in range(sampler.params.max_proposals)
     ]
 
-    if config.step_count_method == "const_step_count":
+    if sampler.params.step_count_method == "const_step_count":
         # const number of steps (ghmc)
-        step_counts = [1 for _ in range(config.max_proposals)]
-    elif config.step_count_method == "const_traj_length":
+        step_counts = [1 for _ in range(sampler.params.max_proposals)]
+    elif sampler.params.step_count_method == "const_traj_length":
         # const trajectory length (drhmc)
         init_step_count = 1
         traj_len = init_step_count * init_step_size
         step_counts = [
-            int(traj_len / step_sizes[k]) for k in range(config.max_proposals)
+            int(traj_len / step_sizes[k]) for k in range(sampler.params.max_proposals)
         ]
 
-    if config.metric == 0:
+    if sampler.params.metric == 0:
         metric = get_nuts_metric(
-            wandb.run.entity, wandb.run.project, f"nuts__chain-{config.chain}"
+            wandb.run.entity, wandb.run.project, f"nuts__chain-{sampler.chain}"
         )
-    elif config.metric == 1:
+    elif sampler.params.metric == 1:
         metric = None
 
-    # init = get_init(ref_draws, config.chain, "bk", posterior_origin)
-    init = get_init(config.posterior, config.posterior_dir, config.chain)
+    init = get_init(posterior.name, posterior.dir, sampler.chain)
 
-    damping = float(config.damping)  # w&b casts damping float 1.0 to 1
+    damping = float(sampler.params.damping)  # w&b casts damping float 1.0 to 1
+
+    seed = int(str(sampler.seed) + str(sampler.chain))
 
     return DrGhmcDiag(
         model=model,
-        max_proposals=config.max_proposals,
+        max_proposals=sampler.params.max_proposals,
         leapfrog_step_sizes=step_sizes,
         leapfrog_step_counts=step_counts,
         damping=damping,
         metric_diag=metric,
         init=init,
-        seed=config.seed,
-        prob_retry=config.probabilistic,
+        seed=seed,
+        prob_retry=sampler.params.probabilistic,
     )
 
 
-def _compute_accept_prob(diagnostic):
-    """From individual proposal acceptance probabilities, compute overall acceptance
-    probability"""
-    # extract acceptance probabilities from diagnostic dict
-    acceptance_probs = []
-    for k, v in diagnostic.items():
-        if "acceptance" in k:
-            acceptance_probs.append(v)
-
-    # compute overall acceptance probability
-    acceptance = 0
-    for i, a in enumerate(acceptance_probs):
-        term = a
-        for j in range(i):
-            term *= 1 - acceptance_probs[j]
-        acceptance += term
-    return acceptance
-
-
-def run_once(f):
-    def wrapper(*args, **kwargs):
-        if not wrapper.has_run:
-            wrapper.has_run = True
-            return f(*args, **kwargs)
-    wrapper.has_run = False
-    return wrapper
-
-
-@run_once
-def init_wandb(num_params):
-    wandb.define_metric("grad_evals", summary="max")
-    for i in range(num_params):
-        wandb.define_metric(f"param_{i}/trace", step_metric="grad_evals", summary="mean")
-
-
-def log_history_to_wandb(history, idx=-1):
-    cur_draw = history["draws"][idx]
-    num_params = len(cur_draw)
-    init_wandb(num_params)
-    
-    log_dict = {f"param_{i}/trace": param for i, param in enumerate(cur_draw)}
-    log_dict["grad_evals"] = history["grad_evals"][idx]
-    log_dict["acceptance_prob/acceptance_prob"] = history["accept_prob"][idx]
-    wandb.log(log_dict)
-
-
-def run_sampler(sampler, gradient_budget):
+def run_sampler(sampler, config):
     history = defaultdict(list)
-    log_freq, prev_log = max(1, gradient_budget // 100), 0
+    thin_counter = -1 # start at -1 to ensure first draw is not thinned
+    gradient_budget = config.sampler.gradient_budget
+    points_per_metric = config.wandb.points_per_metric
+    log_freq, prev_log = max(1, gradient_budget // points_per_metric), 0
 
     while sampler._model.log_density_gradient.calls < gradient_budget:
         # sample from the sampler
         draw = sampler.sample()[0]
-        accept_prob = _compute_accept_prob(sampler.diagnostics)
+        accept_prob = compute_accept_prob(sampler.diagnostics)
         step_size = sampler._leapfrog_step_sizes[sampler.diagnostics["acceptance"] - 1]
         step_count = sampler._leapfrog_step_counts[
             sampler.diagnostics["acceptance"] - 1
         ]
+        
+        # thin draws
+        thin_counter += 1
+        if thin_counter % config.sampler.thin != 0:
+            continue
 
         # record history
         history["draws"] += [draw]
@@ -135,77 +104,41 @@ def run_sampler(sampler, gradient_budget):
         history["num_nans"] += [sampler.diagnostics["num_nans"]]
         history["step_size"] += [step_size]
         history["step_count"] += [step_count]
-        
+
         # wandb logging (ensure log first and last draw)
-        if sampler._model.log_density_gradient.calls - prev_log >= log_freq or prev_log == 0 or sampler._model.log_density_gradient.calls >= gradient_budget:
+        log_history_bool = (config.logging.log_metrics and config.logging.logger == "wandb")
+        log_iter_bool = (sampler._model.log_density_gradient.calls - prev_log >= log_freq) or (prev_log == 0) or (sampler._model.log_density_gradient.calls >= gradient_budget)
+        if log_history_bool and log_iter_bool:
             log_history_to_wandb(history)
             prev_log = sampler._model.log_density_gradient.calls
 
     return history
 
 
+@hydra.main(version_base=None, config_path="../configs/samplers", config_name="drghmc")
 def main(config):
-    if config.generate_history:
-        sampler = configure_sampler(config)
-        history = run_sampler(sampler, config.gradient_budget)
-        save_to_npz(dictionary=history, config=config, filename="history")
-        save_fingerprint(config)
+    if config.sampler.generate_history:
+        with logging_context(config, job_type="history"):
+            
+            sampler = configure_sampler(config.sampler, config.posterior)
+            history = run_sampler(sampler, config)
+            save_dict_to_npz(dictionary=history, filename=f"history__chain={config.sampler.chain}")
 
-    if config.generate_metrics:
-        path = os.path.join(get_data_dir(config), "history.npz")
-        try:
-            history = np.load(path)
-        except Exception as e:
-            raise FileNotFoundError(
-                f"History file not found at\n\t{path}\nwith error:\n\t{e}"
-            )
+    if config.sampler.generate_metrics:
+        with logging_context(config, job_type="metrics"):
 
-        metrics = compute_metrics(history, config)
-        save_to_npz(dictionary=metrics, config=config, filename="metrics")
-
+            history = get_history(config)
+            metrics = compute_metrics(history, config)
+            save_dict_to_npz(dictionary=metrics, filename=f"metrics__chain={config.sampler.chain}")
+            write_summary(config, metrics)
+    
+    ret = (
+        metrics["max_se1"][-1], 
+        metrics["max_se2"][-1],
+        metrics["max_rse1"][-1], 
+        metrics["max_rse2"][-1], 
+    )
+    return ret
 
 if __name__ == "__main__":
-    parser = drghmc_argument_parser()
-    args = parser.parse_args()
-
-    irrelevant_hyperparams = [
-        "experiment",
-        "posterior",
-        "posterior_dir",
-        "seed",
-        "sampler_type",
-        "generate_history",
-        "generate_metrics",
-        "burn_in",
-        "gradient_budget",
-        "metric",
-        "probabilistic",
-    ]
-
-    group_name = "__".join(
-        [args.sampler_type]
-        + [
-            f"{k}-{v}"
-            for k, v in args.__dict__.items()
-            if k not in irrelevant_hyperparams and k not in ["chain"] and v is not None
-        ]
-    )
-    run_name = "__".join(
-        [args.sampler_type]
-        + [
-            f"{k}-{v}"
-            for k, v in args.__dict__.items()
-            if k not in irrelevant_hyperparams and v is not None
-        ]
-    )
-
-    WANDB_RUN_GROUP = group_name  # set environment var
-    wandb.init(
-        config=args,
-        # name=run_name,
-        group=group_name,
-        project=args.experiment,
-        job_type=args.sampler_type,
-        save_code=False,
-    )
-    main(wandb.config)
+    main()

@@ -1,4 +1,5 @@
 import functools
+import logging
 
 import bridgestan as bs
 import numpy as np
@@ -27,13 +28,23 @@ class BayesKitModel(GradModel):
         self.dimensions = self.bsmodel.param_unc_num()
         
     def log_density(self, x):
+        # x_con = self.constrain(x)
+        # log_density_con = self.bsmodel.log_density(x_con)
+        # log_density = self.unconstrain(log_density_con)
+        # return log_density
+        
         return self.bsmodel.log_density(x)
     
     def log_density_gradient(self, x):
+        # x_con = self.constrain(x)
+        # log_density_con, gradient_con = self.bsmodel.log_density_gradient(x_con)
+        # log_density = self.unconstrain(log_density_con)
+        # gradient = self.unconstrain(gradient_con)
+        
         log_density, gradient = self.bsmodel.log_density_gradient(x)
         
         if np.isnan(log_density) or np.isnan(gradient).any():
-            raise ValueError("NaN values in log density or gradient")
+            raise ValueError(f"NaN values in log density or gradient at {x}")
         
         return (log_density, gradient)
     

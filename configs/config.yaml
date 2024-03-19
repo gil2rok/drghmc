@@ -1,0 +1,37 @@
+defaults:
+  - _self_
+
+sampler:
+  generate_history: true 
+  generate_metrics: true
+  gradient_budget: 500000
+  burn_in: 0
+  seed: 42
+  thin: 10
+  chain: 0
+  metric:
+
+posterior:
+  dir: posteriors
+  name: funnel10
+
+logging:
+  logger: wandb
+  log_history: false
+  log_metrics: false
+
+wandb:
+  project: ${posterior.name}
+  entity: gilad-turok
+  points_per_metric: 200
+
+summary:
+  path: data/${posterior.name}/summary.csv
+  fieldnames: [sampler_type, tags, c1, c2, c1_log_scale, c2_log_scale, c1_latent, c2_latent, se1_max, se2_max, group, step_count_factor, step_count, step_count_method, step_size_factor, step_size, max_proposals, reduction_factor, damping, metric, adapt_metric, probabilistic, chain, history_path, metric_path]
+
+hydra:
+  mode: MULTIRUN
+  verbose: false
+  sweep:
+    dir: data/${posterior.name}/${wandb.tags}
+    subdir: ${concat_sampler_params:${sampler.params}}

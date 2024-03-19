@@ -1,0 +1,46 @@
+defaults:
+  - /../config@_here_ # import default configs
+  - override hydra/sweeper: optuna
+  - override hydra/sweeper/sampler: grid
+  - override hydra/launcher: submitit_local
+  - _self_
+
+sampler:
+  params:
+    sampler_type: drghmc
+    step_count_method: const_step_count
+    step_size_factor:
+    # step_size: 0.1
+    max_proposals: 3
+    reduction_factor: 8
+    damping: 0.1
+    metric: 1
+    adapt_metric: true
+    probabilistic: false
+
+wandb:
+  tags: "drghmc-step_size_factor"
+
+hydra:
+  # convert cmd line arguments lists into multiple jobs
+  sweeper:
+    study_name: ${posterior.name}
+    # optuna grid sampler sets n_trials to num of param combinations
+    # however this is incompatible with hydra-optuna-sweeper
+    n_trials: 640
+    n_jobs: 2 # equivalent to SLURM's --ntasks
+    direction: [minimize, minimize, minimize, minimize]
+    params:
+      sampler.chain: range(1)
+      sampler.params.step_count_method: const_step_count
+      sampler.params.step_size_factor: 1
+      sampler.params.max_proposals: 3
+      sampler.params.reduction_factor: 8
+      sampler.params.damping: 0.1
+  
+  # how to launch each individual job
+  launcher:
+    timeout_min: 60
+    nodes: 1
+    cpus_per_task: 1
+    tasks_per_node: 1

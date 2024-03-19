@@ -34,7 +34,7 @@ parameters:
 
   # sampler parameters
   chain:
-    values: [0, 1, 2, 3, 4]
+    value: 5
   step_count_method:
     values: ["const_traj_length", "const_step_count"]
   step_size_factor:

@@ -6,7 +6,7 @@ from typing import Iterator, Optional, Tuple
 import numpy as np
 from numpy.typing import ArrayLike
 
-from utils.typing import DrawAndLogP, GradModel, Seed, VectorType
+from ..utils.typing import DrawAndLogP, GradModel, Seed, VectorType
 
 
 class DrGhmcDiag:
@@ -72,7 +72,7 @@ class DrGhmcDiag:
         self._metric = np.ones(self._dim) if metric_diag is None else metric_diag
         self._rng = np.random.default_rng(seed)
         self._theta = (
-            init
+            self._model.unconstrain(init) # temp
             if (init is not None and init.shape != (0,))
             else self._rng.normal(size=self._dim)
         )
@@ -436,7 +436,7 @@ class DrGhmcDiag:
         self._log_density_gradient_cache = [self._log_density_gradient_cache.pop()]
         logging.debug("Pop from cache at end of sample")
         self.diagnostics["acceptance"] = 0
-        return self._theta, cur_logp
+        return self._model.constrain(self._theta), cur_logp # temp
 
     def accept(
         self,

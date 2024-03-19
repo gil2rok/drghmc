@@ -1,0 +1,34 @@
+defaults:
+  - /../config@_here_ # import default configs
+  - override hydra/sweeper: optuna
+  - override hydra/sweeper/sampler: grid
+  - override hydra/launcher: submitit_local
+  - _self_
+
+sampler:
+  params:
+    sampler_type: nuts
+    metric: identity
+    adapt_metric: true
+
+wandb:
+  tags: "nuts-baseline"
+
+hydra:
+  # convert cmd line arguments lists into multiple jobs
+  sweeper:
+    study_name: ${posterior.name}
+    n_trials: 100
+    n_jobs: 100 # equivalent to SLURM's --ntasks
+    direction: [minimize, minimize, minimize, minimize]
+    params:
+      sampler.chain: range(1)
+      sampler.params.metric: identity
+      sampler.params.adapt_metric: true
+  
+  # how to launch each individual job
+  launcher:
+    timeout_min: 120
+    nodes: 1
+    cpus_per_task: 1
+    tasks_per_node: 1

@@ -6,20 +6,20 @@ using namespace stan::math;
 stan::math::profile_map profiles__;
 static constexpr std::array<const char*, 15> locations_array__ =
   {" (found before start of program)",
-  " (in '/mnt/home/gturok/drghmc/posteriors/stochastic_volatility/stochastic_volatility.stan', line 6, column 4 to column 12)",
-  " (in '/mnt/home/gturok/drghmc/posteriors/stochastic_volatility/stochastic_volatility.stan', line 7, column 4 to column 31)",
-  " (in '/mnt/home/gturok/drghmc/posteriors/stochastic_volatility/stochastic_volatility.stan', line 8, column 4 to column 24)",
-  " (in '/mnt/home/gturok/drghmc/posteriors/stochastic_volatility/stochastic_volatility.stan', line 9, column 4 to column 27)",
-  " (in '/mnt/home/gturok/drghmc/posteriors/stochastic_volatility/stochastic_volatility.stan', line 12, column 4 to column 24)",
-  " (in '/mnt/home/gturok/drghmc/posteriors/stochastic_volatility/stochastic_volatility.stan', line 13, column 4 to column 26)",
-  " (in '/mnt/home/gturok/drghmc/posteriors/stochastic_volatility/stochastic_volatility.stan', line 14, column 4 to column 22)",
-  " (in '/mnt/home/gturok/drghmc/posteriors/stochastic_volatility/stochastic_volatility.stan', line 15, column 4 to column 56)",
-  " (in '/mnt/home/gturok/drghmc/posteriors/stochastic_volatility/stochastic_volatility.stan', line 16, column 4 to column 64)",
-  " (in '/mnt/home/gturok/drghmc/posteriors/stochastic_volatility/stochastic_volatility.stan', line 17, column 4 to column 23)",
-  " (in '/mnt/home/gturok/drghmc/posteriors/stochastic_volatility/stochastic_volatility.stan', line 2, column 4 to column 19)",
-  " (in '/mnt/home/gturok/drghmc/posteriors/stochastic_volatility/stochastic_volatility.stan', line 3, column 11 to column 12)",
-  " (in '/mnt/home/gturok/drghmc/posteriors/stochastic_volatility/stochastic_volatility.stan', line 3, column 4 to column 16)",
-  " (in '/mnt/home/gturok/drghmc/posteriors/stochastic_volatility/stochastic_volatility.stan', line 9, column 20 to column 21)"};
+  " (in 'stochastic_volatility.stan', line 6, column 4 to column 12)",
+  " (in 'stochastic_volatility.stan', line 7, column 4 to column 31)",
+  " (in 'stochastic_volatility.stan', line 8, column 4 to column 24)",
+  " (in 'stochastic_volatility.stan', line 9, column 4 to column 27)",
+  " (in 'stochastic_volatility.stan', line 12, column 4 to column 24)",
+  " (in 'stochastic_volatility.stan', line 13, column 4 to column 26)",
+  " (in 'stochastic_volatility.stan', line 14, column 4 to column 22)",
+  " (in 'stochastic_volatility.stan', line 15, column 4 to column 56)",
+  " (in 'stochastic_volatility.stan', line 16, column 4 to column 64)",
+  " (in 'stochastic_volatility.stan', line 17, column 4 to column 23)",
+  " (in 'stochastic_volatility.stan', line 2, column 4 to column 19)",
+  " (in 'stochastic_volatility.stan', line 3, column 11 to column 12)",
+  " (in 'stochastic_volatility.stan', line 3, column 4 to column 16)",
+  " (in 'stochastic_volatility.stan', line 9, column 20 to column 21)"};
 class stochastic_volatility_model final : public model_base_crtp<stochastic_volatility_model> {
  private:
   int T;
@@ -87,7 +87,7 @@ class stochastic_volatility_model final : public model_base_crtp<stochastic_vola
   }
   inline std::vector<std::string> model_compile_info() const noexcept {
     return std::vector<std::string>{"stanc_version = stanc3 v2.33.1",
-             "stancflags = --include-paths=."};
+             "stancflags = --filename-in-msg=stochastic_volatility.stan"};
   }
   // Base log prob
   template <bool propto__, bool jacobian__, typename VecR, typename VecI,

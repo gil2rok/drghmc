@@ -3,6 +3,7 @@ data/
 logs/
 .old_data/
 wandb/
+*ref_draws.json.zip
 
 # I also commented out lines about .vscode files for launcher.json and settings.json
 ### End of my custom gitignore files ###

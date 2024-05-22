@@ -1,18 +1,16 @@
 defaults:
   - /../config@_here_ # import default configs
-  - override hydra/sweeper: optuna
-  - override hydra/sweeper/sampler: grid
-  - override hydra/launcher: submitit_local
   - _self_
 
 sampler:
   params:
     sampler_type: hmc
     step_count_factor: 0.9
-    step_size_factor: 1.0
+    step_size_factor: null
+    step_size: 0.01
     damping: 1.0
     metric: 1
-    adapt_metric: true
+    adapt_metric: false
     probabilistic: false
 
 wandb:
@@ -21,21 +19,5 @@ wandb:
 hydra:
   # convert cmd line arguments lists into multiple jobs
   sweeper:
-    study_name: ${posterior.name}
-    # optuna grid sampler sets n_trials to num of param combinations
-    # however this is incompatible with hydra-optuna-sweeper
-    n_trials: 100
-    n_jobs: 100 # equivalent to SLURM's --ntasks
-    direction: [minimize, minimize, minimize, minimize]
     params:
       sampler.chain: range(100)
-      sampler.params.step_count_factor: 0.9
-      sampler.params.step_size_factor: 0.08
-      sampler.params.damping: 1.0
-  
-  # how to launch each individual job
-  launcher:
-    timeout_min: 60
-    nodes: 1
-    cpus_per_task: 1
-    tasks_per_node: 1

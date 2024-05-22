@@ -6,10 +6,10 @@ import numpy as np
 
 @lru_cache(maxsize=20)
 def _get_nuts_history(sampler, posterior):
-    metric_name = "identity" if sampler.params.metric == 1 else "diag_cov"
+    metric_name = "identity" if sampler.params.metric == 1 else "diag_cov" # specifies metric initialization
     dir_name = f"adapt_metric={sampler.params.adapt_metric}__metric={metric_name}__sampler_type=nuts" 
     fname = f"history__chain={sampler.chain}.npz"
-    path = os.path.join("data", f"{posterior.name}", "nuts-baseline", dir_name, fname)
+    path = os.path.join("data", f"{posterior.name}", "baseline", dir_name, fname)
 
     try:
         history = np.load(path)
@@ -33,4 +33,5 @@ def get_nuts_step_counts(sampler, posterior):
 
 
 def get_nuts_metric(sampler, posterior):
-    pass
+    history = _get_nuts_history(sampler, posterior)
+    return 1 / history["metric"].squeeze()

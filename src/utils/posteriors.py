@@ -28,6 +28,11 @@ def get_init(posterior, posterior_dir, chain):
     
     Ensure array is contiguous b/c Stan models require it.
     """
+    
+    if posterior == "stochastic_volatility":
+        fname = os.path.join(posterior_dir, posterior, "stochastic_volatility.inits.npy")
+        return np.load(fname)
+    
     ref_draws = get_ref_draws(posterior, posterior_dir)
     
     num_chains = ref_draws.shape[0]
@@ -72,7 +77,7 @@ def get_analytic_params(posterior, posterior_dir):
             for k, v in json.load(f).items():
                 analytic_params[k] = np.array(list(v.values()))
     except:
-        logging.info(f"Analytic parameters not found for {posterior} posterior.")
+        logging.debug(f"Analytic parameters not found for {posterior} posterior.")
         
     return analytic_params
 
@@ -92,6 +97,10 @@ def get_true_params_mean(posterior, posterior_dir):
     Returns:
         true_params_mean: numpy array of true draws [num_params]
     """
+    
+    if posterior == "stochastic_volatility":
+        fname = os.path.join(posterior_dir, posterior, "stochastic_volatility.true_params.npz")
+        return np.load(fname)["mean"]
     
     ref_draws = get_ref_draws(posterior, posterior_dir)
     ref_params_mean = ref_draws.mean(axis=(0, 2))
@@ -130,6 +139,10 @@ def get_true_params_std(posterior, posterior_dir):
         true_params_std: numpy array of true draws standard deviation [num_params]
     """
     
+    if posterior == "stochastic_volatility":
+        fname = os.path.join(posterior_dir, posterior, "stochastic_volatility.true_params.npz")
+        return np.load(fname)["std"]
+    
     ref_draws = get_ref_draws(posterior, posterior_dir)
     ref_params_std = ref_draws.std(axis=(0, 2))
 
@@ -166,7 +179,10 @@ def get_true_params_squared_mean(posterior, posterior_dir):
     Returns:
         true_params_squared_mean: numpy array of true draws squared [num_params]
     """
-        
+    if posterior == "stochastic_volatility":
+        fname = os.path.join(posterior_dir, posterior, "stochastic_volatility.true_params.npz")
+        return np.load(fname)["squard_mean"]
+    
     ref_draws = get_ref_draws(posterior, posterior_dir)
     ref_draws_squared = np.square(ref_draws)
     ref_params_squared_mean = ref_draws_squared.mean(axis=(0, 2))
@@ -204,6 +220,9 @@ def get_true_params_squared_std(posterior, posterior_dir):
     Returns:
         true_params_squared_std: numpy array of true draws squared standard deviation [num_params]
     """
+    if posterior == "stochastic_volatility":
+        fname = os.path.join(posterior_dir, posterior, "stochastic_volatility.true_params.npz")
+        return np.load(fname)["squared_std"]
     
     ref_draws = get_ref_draws(posterior, posterior_dir)
     ref_draws_squared = np.square(ref_draws)
@@ -245,9 +264,9 @@ def get_ref_draws(posterior, posterior_dir):
     """
     ref_draws_path = get_ref_draws_path(posterior, posterior_dir)
 
-    logging.info(f"Loading reference draws from {ref_draws_path}")
+    logging.debug(f"Loading reference draws from {ref_draws_path}")
     
-    logging.info(f"Unzipping {ref_draws_path}.")
+    logging.debug(f"Unzipping {ref_draws_path}.")
     ref_draws_dict = None
     with ZipFile(ref_draws_path + ".zip", "r") as z:
         try:
@@ -259,13 +278,13 @@ def get_ref_draws(posterior, posterior_dir):
             with z.open(fname, "r") as f:
                 ref_draws_dict = json.load(f)
                 
-    logging.info(f"Reference draws unzipped.")
+    logging.debug(f"Reference draws unzipped.")
             
     num_chains = len(ref_draws_dict)
     num_params = len(ref_draws_dict[0])
     num_draws = len(list(ref_draws_dict[0].values())[0])
     
-    logging.info(f"Converting reference draws to numpy array.")
+    logging.debug(f"Converting reference draws to numpy array.")
     ref_draws = np.zeros((num_chains, num_params, num_draws))
     for chain_idx, chain in enumerate(ref_draws_dict):
         for param_idx, param in enumerate(chain.values()):
@@ -304,15 +323,15 @@ def _get_posteriordb_posterior(posterior_name, posterior_dir):
         data_path += ".json"
     except Exception as e:
         data_path = None
-        logging.info(f"Data file not found for {posterior_name} posterior.")
+        logging.debug(f"Data file not found for {posterior_name} posterior.")
     
     try:
         ref_draws_path = posterior.reference_draws_file_path()
-        logging.info(f"Reference draws file found for {posterior_name} posterior at {ref_draws_path}")
-        logging.info(f"Ref draws info: {posterior.reference_draws_info()}")
+        logging.debug(f"Reference draws file found for {posterior_name} posterior at {ref_draws_path}")
+        logging.debug(f"Ref draws info: {posterior.reference_draws_info()}")
     except:
         ref_draws_path = None
-        logging.info(f"Reference draws file not found for {posterior_name} posterior.")
+        logging.debug(f"Reference draws file not found for {posterior_name} posterior.")
         
     posterior_paths = dict(
         model_path=model_path,
@@ -331,17 +350,17 @@ def _get_custom_posterior(posterior, posterior_dir):
     data_path = os.path.join(path, f"{posterior}.data.json")
     if not os.path.isfile(data_path):
         data_path = None
-        logging.info(f"Data file not found for {posterior}  posterior.")
+        logging.debug(f"Data file not found for {posterior}  posterior.")
     
     ref_draws_path = os.path.join(path, f"{posterior}.ref_draws.json")
     if not os.path.isfile(ref_draws_path + ".zip"):
         ref_draws_path = None
-        logging.info(f"Reference draws file not found for {posterior} posterior.")
+        logging.debug(f"Reference draws file not found for {posterior} posterior.")
         
     analytic_params_path = os.path.join(path, f"{posterior}.analytic_params.json")
     if not os.path.isfile(analytic_params_path):
         analytic_params_path = None
-        logging.info(f"Analytic parameters file not found for {posterior} posterior.")
+        logging.debug(f"Analytic parameters file not found for {posterior} posterior.")
         
     posterior_paths = dict(
         model_path=model_path,

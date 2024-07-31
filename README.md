@@ -10,7 +10,7 @@
 Code for the paper "Sampling From multiscale densities with delayed rejection generalized Hamiltonian Monte Carlo" submitted to NeurIPS 2024.
 
 > [!TIP] 
-> DR-G-HMC is implemented in [Bayes-Kit](https://github.com/flatironinstitute/bayes-kit), a repository for Bayesian inference algorithms in Python. Consider giving it a star :star:.
+> DR-G-HMC is implemented in a super-readable way in [Bayes-Kit](https://github.com/flatironinstitute/bayes-kit), a repository for Bayesian inference algorithms in Python. Consider giving it a star :star:.
 
 ## Overview :mag_right:
 

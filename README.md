@@ -38,7 +38,7 @@ some steps
 
 ## Code structure :file_folder:
 
-```bash
+```python
 drghmc/
 │
 ├── configs/                # experiment configs

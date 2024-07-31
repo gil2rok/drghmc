@@ -1,10 +1,6 @@
 <div align="center">
 
 # Delayed rejection generalized Hamiltonian Monte Carlo
-
-![License](https://img.shields.io/badge/license-MIT-red.svg) 
-![Python](https://img.shields.io/badge/python-3.9%2B-blue.svg)
-![Numpy](https://img.shields.io/badge/numpy-1.21.2-blue.svg)
 </div>
 
 <p align="center">

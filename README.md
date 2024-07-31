@@ -17,13 +17,13 @@ Code for experiments, manuscript, and poster of [Sampling From multiscale densit
 
 We propose the delayed rejection generalized Hamiltonian Monte Carlo (DR-G-HMC) algorithm to simultaneously solve two problems in Markov chain Monte Carlo sampling for Bayesian inference:
 
-- **Multiscale densities**: DR-G-HMC can sample from densities with varying curvature (multiscale) with dynamic step size selection, enabled by making multiple proposal attempts with decreasing step sizes in a single sampling iteration.
+- **Multiscale densities**: DR-G-HMC can sample from hierarchical models that exhibit varying curvature (multiscale) with dynamic step size selection, enabled by making multiple proposal attempts with decreasing step sizes in a single sampling iteration.
 - **Inefficient G-HMC**: DR-G-HMC replaces rejections with additional proposal attempts, thereby avoiding inefficient backtracking that plagues the generalized HMC algorithm (G-HMC) upon encountering a rejection.
 
 Extensive emperical experiments demonstrate that DR-G-HMC can indeed (1) sample from multiscale densities and (2) resolve the inefficiencies of G-HMC while (3) maintaining competitiveness with state of the art samplers (NUTS) on non-multiscale densities.
 
 > [!TIP] 
-> DR-G-HMC is implemented cleanly in [Bayes-Kit](https://github.com/flatironinstitute/bayes-kit), an easy-to-use repo for Bayesian inference algorithms in Python. Consider giving it a star :star:.
+> DR-G-HMC is implemented cleanly in [Bayes-Kit](https://github.com/flatironinstitute/bayes-kit), an easy-to-use repository for Bayesian inference algorithms in Python. Consider using it for your hiearchical models and starring the repo :star:.
 
 <!-- 
 ## Details :mag:

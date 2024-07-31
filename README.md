@@ -11,19 +11,22 @@
    [📃 <a href="https://arxiv.org/abs/2406.02741" target="_blank">Paper</a> ] • [📊 Poster WIP] • [🐦 Tweet WIP] • [📄 Citation WIP]<br>
 </p>
 
-Code for experiments, manuscript, and poster of [Sampling From multiscale densities with delayed rejection generalized Hamiltonian Monte Carlo](https://arxiv.org/abs/2406.02741), submitted to NeurIPS 2024.
+This repository contains code for experiments, manuscript, and poster of [Sampling From multiscale densities with delayed rejection generalized Hamiltonian Monte Carlo](https://arxiv.org/abs/2406.02741), submitted to NeurIPS 2024.
 
 ## Overview :telescope:
 
 We propose the delayed rejection generalized Hamiltonian Monte Carlo (DR-G-HMC) algorithm to simultaneously solve two problems in Markov chain Monte Carlo sampling for Bayesian inference:
 
-- **Multiscale densities**: DR-G-HMC can sample from hierarchical models that exhibit varying curvature (multiscale) with dynamic step size selection, enabled by making multiple proposal attempts with decreasing step sizes in a single sampling iteration.
-- **Inefficient G-HMC**: DR-G-HMC replaces rejections with additional proposal attempts, thereby avoiding inefficient backtracking that plagues the generalized HMC algorithm (G-HMC) upon encountering a rejection.
+- **Multiscale densities**: DR-G-HMC can sample from hierarchical models that exhibit varying curvature (ie multiscale) with dynamic step size selection, enabled by making multiple proposal attempts with decreasing step sizes in a single sampling iteration.
+- **Inefficient G-HMC**: DR-G-HMC replaces rejections with additional proposal attempts, thereby avoiding inefficient backtracking that plagues the generalized HMC algorithm (G-HMC).
 
 Extensive emperical experiments demonstrate that DR-G-HMC can indeed (1) sample from multiscale densities and (2) resolve the inefficiencies of G-HMC while (3) maintaining competitiveness with state of the art samplers (NUTS) on non-multiscale densities.
 
-> [!TIP] 
-> DR-G-HMC is implemented cleanly in [Bayes-Kit](https://github.com/flatironinstitute/bayes-kit), an easy-to-use repository for Bayesian inference algorithms in Python. Consider using it for your hiearchical models and starring the repo :star:.
+## Usage :computer:
+
+DR-G-HMC is implemented cleanly in [Bayes-Kit](https://github.com/flatironinstitute/bayes-kit), an easy-to-use repository for Bayesian inference algorithms in Python.
+
+Consider using it for your next hiearchical model and starring the repository :star:.
 
 <!-- 
 ## Details :mag:
@@ -44,7 +47,7 @@ With *generalized HMC*, we make this approach more efficient. Instead of using a
 
 ## Installation :wrench:
 
-Inside your favorite virtual environment, run the following commands:
+To rerun experiments from the paper, run the following commands in your favorite virtual environment:
 
 ```bash
 # clone project

@@ -24,9 +24,9 @@ Extensive emperical experiments demonstrate that DR-G-HMC can indeed (1) sample 
 
 ## Usage :computer:
 
-To use DR-G-HMC for your own hierarchical model with multiscale geometry, use the implementation in [Bayes-Kit](https://github.com/flatironinstitute/bayes-kit/blob/main/bayes_kit/drghmc.py).
+To **use DR-G-HMC for your own hierarchical model** with multiscale geometry, use the implementation in [Bayes-Kit](https://github.com/flatironinstitute/bayes-kit/blob/main/bayes_kit/drghmc.py).
 
-Bayes-Kit is an easy-to-use repository for Bayesian inference algorithms in Python. Consider starring the repository :star:.
+Bayes-Kit is an easy-to-use repository for Bayesian inference algorithms in Python. Consider starring the repository :star: along with others ![Bayes-Kit](https://img.shields.io/github/stars/flatironinstitute/bayes-kit?style=social) !
 
 ## Installation :wrench:
 

@@ -4,10 +4,10 @@
 </div>
 
 <p align="center">
-   [📃 <a href="https://arxiv.org/abs/2406.02741" target="_blank">Paper</a> ]• [📊 Poster WIP] • [🐦 Tweet WIP] <br>
+   [📃 <a href="https://arxiv.org/abs/2406.02741" target="_blank">Paper</a> ] • [📊 Poster WIP] • [🐦 Tweet WIP] • [📄 Citation WIP]<br>
 </p>
 
-Code for the paper "Sampling From multiscale densities with delayed rejection generalized Hamiltonian Monte Carlo" submitted to NeurIPS 2024.
+Code for the paper [Sampling From multiscale densities with delayed rejection generalized Hamiltonian Monte Carlo](https://arxiv.org/abs/2406.02741) submitted to NeurIPS 2024.
 
 > [!TIP] 
 > Readable and stand-alone implementation of the DR-G-HMC sampler can be found in [Bayes-Kit](https://github.com/flatironinstitute/bayes-kit), a repository for Bayesian inference algorithms in Python. Consider giving it a star :star:.

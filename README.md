@@ -24,26 +24,9 @@ Extensive emperical experiments demonstrate that DR-G-HMC can indeed (1) sample 
 
 ## Usage :computer:
 
-DR-G-HMC is implemented cleanly in [Bayes-Kit](https://github.com/flatironinstitute/bayes-kit), an easy-to-use repository for Bayesian inference algorithms in Python.
+DR-G-HMC is implemented cleanly in [Bayes-Kit](https://github.com/flatironinstitute/bayes-kit/blob/main/bayes_kit/drghmc.py), an easy-to-use repository for Bayesian inference algorithms in Python.
 
 Consider using it for your next hiearchical model and starring the repository :star:.
-
-<!-- 
-## Details :mag:
-
-**Background:** Markov chain Monte Carlo (MCMC) methods are a class of algorithms to generate samples from intractable probability densities. Gradient-based MCMC methods, such as Hamiltonian Monte Carlo (HMC), are widely successful because of their efficency in high dimensions.
-
-**Problem:** HMC struggles when the target density is *multiscale* i.e. contains curvature that varies throughout the density. In this setting, a large leapfrog step size is needed to *efficiently* explore low curvature regions, while a small leapfrog step size is needed to *accurately* explore high curvature regions.
-
-Multiscale geometry is a pathology that frequently occurs in hiearchical models all over statistics: small changes to top level parameters may induce drastic changes to lower level parameters. (Also note that preconditioning with a mass matrix only helps with *constant* curvature).
-
-**Solution:** We propose a new MCMC sampler, Delayed Rejection Generalized Hamiltonian Monte Carlo (DR-G-HMC), that can efficiently sample from multiscale densities.
-
-With *delayed rejection*, we can make multiple proposal attempts in the same sampling iteration. If a proposal is rejected, we generate a new proposal with a smaller leapfrog step size, and thus larger acceptance probability. If we start with a large initial step size, we can efficiently explore low curvature regions. If the proposal is rejected, we can (repeatedly) generate a new proposal with a smaller step size, and thus larger acceptance probability, in high curvature regions. This allows for *dynamic* step size selection that can sample from multiscale densities.
-
-With *generalized HMC*, we make this approach more efficient. Instead of using a small step size to traverse an entire HMC trajectory (comprised of many leapfrog steps), generalized HMC uses a small step size for a *single* leapfrog step. This allows for step size adaptation only where needed along a trajectory.
-
-**Bonus:**  -->
 
 ## Installation :wrench:
 

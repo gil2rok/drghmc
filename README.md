@@ -20,7 +20,7 @@ We propose the delayed rejection generalized Hamiltonian Monte Carlo (DR-G-HMC) 
 - **Multiscale densities**: DR-G-HMC can sample from hierarchical models that exhibit varying curvature (ie multiscale) with dynamic step size selection, enabled by making multiple proposal attempts with decreasing step sizes in a single sampling iteration.
 - **Inefficient G-HMC**: DR-G-HMC replaces rejections with additional proposal attempts, thereby avoiding inefficient backtracking that plagues the generalized HMC algorithm (G-HMC).
 
-Extensive emperical experiments demonstrate that DR-G-HMC can indeed (1) sample from multiscale densities and (2) resolve the inefficiencies of G-HMC while (3) maintaining competitiveness with state of the art samplers (NUTS) on non-multiscale densities.
+Extensive emperical experiments demonstrate that DR-G-HMC can indeed (1) sample from multiscale densities (unlike NUTS!) and (2) resolve the inefficiencies of G-HMC while (3) maintaining competitiveness with state of the art samplers (NUTS) on non-multiscale densities.
 
 ## Usage :computer:
 

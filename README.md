@@ -1,20 +1,25 @@
 <div align="center">
 
 # Delayed rejection generalized Hamiltonian Monte Carlo
-</div>
 
+<!-- ![License](https://img.shields.io/badge/license-MIT-red.svg) 
+![Python](https://img.shields.io/badge/python-3.9%2B-blue.svg)
+![Numpy](https://img.shields.io/badge/numpy-1.21.2-blue.svg) -->
+
+</div>
 <p align="center">
    [📃 <a href="https://arxiv.org/abs/2406.02741" target="_blank">Paper</a> ] • [📊 Poster WIP] • [🐦 Tweet WIP] • [📄 Citation WIP]<br>
 </p>
 
-Code for the paper [Sampling From multiscale densities with delayed rejection generalized Hamiltonian Monte Carlo](https://arxiv.org/abs/2406.02741) submitted to NeurIPS 2024.
+Code for experiments, manuscript, and poster of [Sampling From multiscale densities with delayed rejection generalized Hamiltonian Monte Carlo](https://arxiv.org/abs/2406.02741) submitted to NeurIPS 2024.
 
 > [!TIP] 
 > Readable and stand-alone implementation of the DR-G-HMC sampler can be found in [Bayes-Kit](https://github.com/flatironinstitute/bayes-kit), a repository for Bayesian inference algorithms in Python. Consider giving it a star :star:.
-> 
+
 ## Overview :mag_right:
 
 This repository contains the Numpy implementation of the Delayed Rejection Generalized Hamiltonian Monte Carlo (DR-G-HMC) sampler. 
+
 
 ## Installation :wrench:
 
@@ -31,9 +36,34 @@ pip install -r requirements.txt
 
 some steps
 
+## Code structure :file_folder:
+
+```bash
+drghmc/
+│
+├── configs/                # experiment configs
+│
+├── data/                   # store sampler draws
+│
+├── doc/                    # figures, paper manuscript, & poster
+│
+├── drghmc/                 # sampler implementations
+│
+├── posteriors/             # Stan models with data
+│
+├── scripts/                # scripts to run experiments
+```
+
 ## Citation :page_facing_up:
 
-some citation
+```bibtex
+@article{turok2024sampling,
+  title={Sampling From Multiscale Densities With Delayed Rejection Generalized Hamiltonian Monte Carlo},
+  author={Turok, Gilad and Modi, Chirag and Carpenter, Bob},
+  journal={arXiv preprint arXiv:2406.02741},
+  year={2024}
+}
+```
 
 ## Resources :books:
 
@@ -41,7 +71,7 @@ some citation
 - [Delayed rejection Hamiltonian Monte Carlo for sampling multiscale distributions](https://arxiv.org/abs/2110.00610)
 - [Non-reversibly updating a uniform $[0,1]$ value for Metropolis accept/reject decisions](https://arxiv.org/abs/2001.11950)
 
-#### Background Papers
+#### Background papers
 - [A conceptual introduction to Hamiltonian Monte Carlo](https://arxiv.org/pdf/1701.02434.pdf)
 - [MCMC using Hamiltonian dynamics](https://arxiv.org/pdf/1206.1901.pdf)
 - [Tuning-free generalized Hamiltonian Monte Carlo](https://proceedings.mlr.press/v151/hoffman22a/hoffman22a.pdf)

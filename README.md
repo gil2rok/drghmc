@@ -18,19 +18,19 @@ This repository contains code for experiments, manuscript, and poster of [Sampli
 We propose the delayed rejection generalized Hamiltonian Monte Carlo (DR-G-HMC) algorithm to simultaneously solve two problems in Markov chain Monte Carlo sampling for Bayesian inference:
 
 - **Multiscale densities**: DR-G-HMC can sample from hierarchical models that exhibit varying curvature (ie multiscale) with dynamic step size selection, enabled by making multiple proposal attempts with decreasing step sizes in a single sampling iteration.
-- **Inefficient G-HMC**: DR-G-HMC replaces rejections with additional proposal attempts, thereby avoiding inefficient backtracking that plagues the generalized HMC algorithm (G-HMC).
+- **Inefficient G-HMC**: DR-G-HMC replaces rejections with additional proposal attempts, thereby avoiding inefficient backtracking that plagues the generalized HMC (G-HMC) algorithm.
 
-Extensive emperical experiments demonstrate that DR-G-HMC can indeed (1) sample from multiscale densities (unlike NUTS!) and (2) resolve the inefficiencies of G-HMC while (3) maintaining competitiveness with state of the art samplers (NUTS) on non-multiscale densities.
+Extensive emperical experiments demonstrate that DR-G-HMC can indeed (1) sample from multiscale densities (unlike NUTS!) and (2) resolve the inefficiencies of G-HMC while (3) maintaining competitiveness with state of the art samplers on non-multiscale densities.
 
 ## Usage :computer:
 
-DR-G-HMC is implemented cleanly in [Bayes-Kit](https://github.com/flatironinstitute/bayes-kit/blob/main/bayes_kit/drghmc.py), an easy-to-use repository for Bayesian inference algorithms in Python.
+To use DR-G-HMC for your own hierarchical model with multiscale geometry, use the implementation in [Bayes-Kit](https://github.com/flatironinstitute/bayes-kit/blob/main/bayes_kit/drghmc.py).
 
-Consider using it for your next hiearchical model and starring the repository :star:.
+Bayes-Kit is an easy-to-use repository for Bayesian inference algorithms in Python. Consider starring the repository :star:.
 
 ## Installation :wrench:
 
-To rerun experiments from the paper, run the following commands in your favorite virtual environment:
+To run experiments from the paper, run the following commands in your favorite virtual environment:
 
 ```bash
 # clone project

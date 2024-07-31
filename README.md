@@ -41,11 +41,11 @@ cd drghmc
 pip install -r requirements.txt
 ```
 
-## How to run :rocket:
+## Quickstart :rocket:
 
 some steps
 
-## Code structure :file_folder:
+## Repository Structure :open_file_folder:
 
 ```python
 drghmc/

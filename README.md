@@ -1,19 +1,57 @@
-# Delayed Rejection Generalized Hamiltonian Monte Carlo (DRGHMC) Sampler
+<div align="center">
 
-## Work In Progress :construction:
+# DR-G-HMC
 
-Experiments with DRGHMC, a novel sampler that excells at high-curvature densities. Preliminary results are promising but more experiments are needed.
+![License](https://img.shields.io/badge/license-MIT-red.svg) 
+![Python](https://img.shields.io/badge/python-3.9%2B-blue.svg)
+![Numpy](https://img.shields.io/badge/numpy-1.21.2-blue.svg)
+</div>
 
-This is my work done at the Flatiron Institue with [Chirag Modi](https://modichirag.github.io/), [Edward Roualdes](https://roualdes.us/), and [Bob Carpenter](https://bob-carpenter.github.io/). This repository is forked from the [Bayes-Kit](https://github.com/flatironinstitute/bayes-kit) repository, where I implemented DRGHMC.
+Code for the paper "Sampling From multiscale densities with delayed rejection generalized Hamiltonian Monte Carlo" submitted to NeurIPS 2024.
 
-## Relevant papers :open_file_folder: :
-- [Hamiltonian Monte Carlo (HMC) Introduction](https://arxiv.org/pdf/1701.02434.pdf)
-- [Another HMC Introduction](https://arxiv.org/pdf/1206.1901.pdf)
-- [Delayed Rejection HMC](https://arxiv.org/abs/2110.00610)
-- [Generalized HMC](https://proceedings.mlr.press/v151/hoffman22a/hoffman22a.pdf)
+Readable and stand-alone implementation of the DR-G-HMC sampler can be found in [Bayes-Kit](https://github.com/flatironinstitute/bayes-kit), a repository for Bayesian inference algorithms in Python.
 
-## Obligatory fancy images:
+<p align="center">
+   [📃 <a href="https://arxiv.org/abs/2406.02741" target="_blank">Paper</a> ]• [📊 Poster WIP] • [🐦 Tweet WIP] <br>
+</p>
 
-HMC sampling from a banana-shaped distribution, taken from [here](https://github.com/chi-feng/mcmc-demo/tree/master):
+## Overview :mag_right:
+
+This repository contains the Numpy implementation of the Delayed Rejection Generalized Hamiltonian Monte Carlo (DR-G-HMC) sampler. 
+
+## Installation :wrench:
+
+```bash
+# clone project
+git clone https://github.com/gil2rok/drghmc
+cd drghmc
+
+# install requirements
+pip install -r requirements.txt
+```
+
+## How to run :rocket:
+
+some steps
+
+## Citation :page_facing_up:
+
+some citation
+
+## Resources :books:
+
+#### Papers
+- [Delayed rejection Hamiltonian Monte Carlo for sampling multiscale distributions](https://arxiv.org/abs/2110.00610)
+- [Non-reversibly updating a uniform $[0,1]$ value for Metropolis accept/reject decisions](https://arxiv.org/abs/2001.11950)
+
+#### Background Papers
+- [A conceptual introduction to Hamiltonian Monte Carlo](https://arxiv.org/pdf/1701.02434.pdf)
+- [MCMC using Hamiltonian dynamics](https://arxiv.org/pdf/1206.1901.pdf)
+- [Tuning-free generalized Hamiltonian Monte Carlo](https://proceedings.mlr.press/v151/hoffman22a/hoffman22a.pdf)
+- [Slice sampling](https://arxiv.org/abs/physics/0009028)
+
+#### Visualization
+
+Hamiltonian Monte Carlo sampling from a 2-dimensional banana-shaped distribution:
 
 ![hmc sampler](https://raw.githubusercontent.com/chi-feng/mcmc-demo/master/docs/hmc.gif)

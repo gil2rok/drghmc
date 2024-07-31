@@ -67,9 +67,9 @@ drghmc/
 
 ## Resources :books:
 
-#### Papers
+#### Relevant Papers
 - [Delayed rejection Hamiltonian Monte Carlo for sampling multiscale distributions](https://arxiv.org/abs/2110.00610)
-- [Non-reversibly updating a uniform $[0,1]$ value for Metropolis accept/reject decisions](https://arxiv.org/abs/2001.11950)
+- [Non-reversibly updating a uniform [0,1] value for Metropolis accept/reject decisions](https://arxiv.org/abs/2001.11950)
 
 #### Background papers
 - [A conceptual introduction to Hamiltonian Monte Carlo](https://arxiv.org/pdf/1701.02434.pdf)

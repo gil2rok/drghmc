@@ -1,7 +1,6 @@
 ### Start of my custom gitignore files ###
 data/
 logs/
-wandb/
 *ref_draws.json.zip
 *ref_draws.json
 

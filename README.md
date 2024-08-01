@@ -21,27 +21,29 @@ This repository contains code for experiments, manuscript, and poster of [Sampli
 
 # Delayed Rejection Generalized Hamiltonian Monte Carlo
 
-[**Paper**](https://arxiv.org/abs/2406.02741) :page_facing_up: • 
-[**Poster**](#overview) :bar_chart: • 
-[**Tweet**](#overview) :bird:
-
-</div>
-
-This repository contains code for experiments, manuscript, and poster of [**Sampling From Multiscale Densities with Delayed Rejection Generalized Hamiltonian Monte Carlo**](https://arxiv.org/abs/2406.02741), submitted to NeurIPS 2024.
-
-<div align="center">
-
 [**Overview** :telescope:](#overview) • 
 [**Quick Start** :rocket:](#quick-start) • 
 [**Installation** :wrench:](#installation) • 
 [**Experiments** :scientist:](#experiments) • 
-[**Repository Structure** :open_file_folder:](#repository-structure) • 
+[**Layout** :open_file_folder:](#layout) • 
 [**Citation** :scroll:](#citation) • 
 [**Resources** :books:](#resources)
 
 </div>
 
+This repository contains code for experiments, manuscript, and poster of [**Sampling From Multiscale Densities with Delayed Rejection Generalized Hamiltonian Monte Carlo**](https://arxiv.org/abs/2406.02741), submitted to NeurIPS 2024.
 
+**Explore our key resources:**
+
+- **[Read the Full Paper](https://arxiv.org/abs/2406.02741) :page_facing_up:**. Dive into our detailed research paper on Arxiv.
+
+- **[View the Poster](#overview) :bar_chart:**.  Check out the poster summarizing our work.
+
+- **[See the Tweet](#overview) :bird:**.  Read our announcement on Twitter.
+
+<!-- [**Paper**](https://arxiv.org/abs/2406.02741) :page_facing_up: • 
+[**Poster**](#overview) :bar_chart: • 
+[**Tweet**](#overview) :bird: -->
 
 
 ## Overview :telescope:
@@ -77,7 +79,7 @@ pip install -r requirements.txt
 
 Reproduce experiements from the paper by running the following commands:
 
-## Repository Structure :open_file_folder:
+## Layout :open_file_folder:
 
 ```python
 drghmc/

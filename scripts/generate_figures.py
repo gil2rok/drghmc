@@ -274,13 +274,12 @@ def make_grad_vs_error_plot(
 
     fig.set(yscale="log")        
     # set title for each subplot
-    fig.axes.flat[0].set_title(r'Avg Error in Mean ($\mathcal{L}_{\theta, t}$)')
-    fig.axes.flat[1].set_title(r'Avg Error in Variance ($\mathcal{L}_{\theta^2, t}$)')
+    fig.axes.flat[0].set_title(r'Avg Error in Mean ($\mathcal{L}_{\theta, T}$)')
+    fig.axes.flat[1].set_title(r'Avg Error in Variance ($\mathcal{L}_{\theta^2, T}$)')
     
-    # fig.axes.flat[0].set_ylabel(r'Avg Error in Mean )$\mathcal{L}_{\theta, T}$)')
-    # fig.axes.flat[1].set_ylabel(r'Avg Error in Variance $(\mathcal{L}_{\theta^2, T}$)')
     fig.set_ylabels("Error")
-    fig.set_xlabels(r'$t$ Gradient Evaluations')
+    # fig.set_xlabels(r'$t$ Gradient Evaluations')
+    fig.set_xlabels(r'Num Gradient Evaluations')
     fig.figure.subplots_adjust(bottom=0.3)
     sns.move_legend(fig, "lower center", ncol=3, title="")
     fname = os.path.join(figures_dir, f"grad_vs_error")

@@ -1,19 +1,96 @@
-# Delayed Rejection Generalized Hamiltonian Monte Carlo (DRGHMC) Sampler
+<div align="center">
 
-## Work In Progress :construction:
+# Delayed rejection generalized Hamiltonian Monte Carlo
 
-Experiments with DRGHMC, a novel sampler that excells at high-curvature densities. Preliminary results are promising but more experiments are needed.
+<!-- ![License](https://img.shields.io/badge/license-MIT-red.svg) 
+![Python](https://img.shields.io/badge/python-3.9%2B-blue.svg)
+![Numpy](https://img.shields.io/badge/numpy-1.21.2-blue.svg) -->
 
-This is my work done at the Flatiron Institue with [Chirag Modi](https://modichirag.github.io/), [Edward Roualdes](https://roualdes.us/), and [Bob Carpenter](https://bob-carpenter.github.io/). This repository is forked from the [Bayes-Kit](https://github.com/flatironinstitute/bayes-kit) repository, where I implemented DRGHMC.
+</div>
+<p align="center">
+   [📃 <a href="https://arxiv.org/abs/2406.02741" target="_blank">Paper</a> ] • [📊 Poster WIP] • [🐦 Tweet WIP] • [📄 Citation WIP]<br>
+</p>
 
-## Relevant papers :open_file_folder: :
-- [Hamiltonian Monte Carlo (HMC) Introduction](https://arxiv.org/pdf/1701.02434.pdf)
-- [Another HMC Introduction](https://arxiv.org/pdf/1206.1901.pdf)
-- [Delayed Rejection HMC](https://arxiv.org/abs/2110.00610)
-- [Generalized HMC](https://proceedings.mlr.press/v151/hoffman22a/hoffman22a.pdf)
+This repository contains code for experiments, manuscript, and poster of [Sampling From multiscale densities with delayed rejection generalized Hamiltonian Monte Carlo](https://arxiv.org/abs/2406.02741), submitted to NeurIPS 2024.
 
-## Obligatory fancy images:
+## Overview :telescope:
 
-HMC sampling from a banana-shaped distribution, taken from [here](https://github.com/chi-feng/mcmc-demo/tree/master):
+We propose the delayed rejection generalized Hamiltonian Monte Carlo (DR-G-HMC) algorithm to simultaneously solve two problems in Markov chain Monte Carlo sampling for Bayesian inference:
+
+- **Multiscale densities**: DR-G-HMC can sample from hierarchical models that exhibit varying curvature (ie multiscale) with dynamic step size selection, enabled by making multiple proposal attempts with decreasing step sizes in a single sampling iteration.
+- **Inefficient G-HMC**: DR-G-HMC replaces rejections with additional proposal attempts, thereby avoiding inefficient backtracking that plagues the generalized HMC (G-HMC) algorithm.
+
+Extensive emperical experiments demonstrate that DR-G-HMC can indeed (1) sample from multiscale densities (unlike NUTS!) and (2) resolve the inefficiencies of G-HMC while (3) maintaining competitiveness with state of the art samplers on non-multiscale densities.
+
+## General Usage :computer:
+
+> [!TIP]
+> To use DR-G-HMC for your own hierarchical model with multiscale geometry, use the [Bayes-Kit](https://github.com/flatironinstitute/bayes-kit/blob/main/bayes_kit/drghmc.py) implementation.
+>
+> Bayes-Kit is a readable, well documented repository for Bayesian inference algorithms in Python. Consider starring the repository :star: along with others ![Bayes-Kit](https://img.shields.io/github/stars/flatironinstitute/bayes-kit?style=social) !
+
+## Installation :wrench:
+
+To run experiments from the paper, run the following commands in your favorite virtual environment:
+
+```bash
+# clone project
+git clone https://github.com/gil2rok/drghmc
+cd drghmc
+
+# install requirements
+pip install -r requirements.txt
+```
+
+## Quickstart :rocket:
+
+some steps
+
+## Repository Structure :open_file_folder:
+
+```python
+drghmc/
+│
+├── configs/                # experiment configs
+│
+├── data/                   # store sampler draws
+│
+├── doc/                    # figures, paper manuscript, & poster
+│
+├── posteriors/             # Stan models with data & reference draws
+│
+├── scripts/                # scripts to run experiments
+│
+├── src/                    # sampler implementations
+```
+
+This repository also includes a `README.md`, `requirements.txt`, `LICENSE`, `.gitignore`, and `CITATION.bib` files. The `data` and `posteriors` directories also contain their own `README.md` files explaining their contents.
+
+## Citation :page_facing_up:
+
+```bibtex
+@article{turok2024sampling,
+  title={Sampling From Multiscale Densities With Delayed Rejection Generalized Hamiltonian Monte Carlo},
+  author={Turok, Gilad and Modi, Chirag and Carpenter, Bob},
+  journal={arXiv preprint arXiv:2406.02741},
+  year={2024}
+}
+```
+
+## Resources :books:
+
+#### Relevant Papers
+- [Delayed rejection Hamiltonian Monte Carlo for sampling multiscale distributions](https://arxiv.org/abs/2110.00610)
+- [Non-reversibly updating a uniform [0,1] value for Metropolis accept/reject decisions](https://arxiv.org/abs/2001.11950)
+
+#### Background papers
+- [A conceptual introduction to Hamiltonian Monte Carlo](https://arxiv.org/pdf/1701.02434.pdf)
+- [MCMC using Hamiltonian dynamics](https://arxiv.org/pdf/1206.1901.pdf)
+- [Tuning-free generalized Hamiltonian Monte Carlo](https://proceedings.mlr.press/v151/hoffman22a/hoffman22a.pdf)
+- [Slice sampling](https://arxiv.org/abs/physics/0009028)
+
+#### Visualization
+
+Hamiltonian Monte Carlo sampling from a 2-dimensional banana-shaped distribution:
 
 ![hmc sampler](https://raw.githubusercontent.com/chi-feng/mcmc-demo/master/docs/hmc.gif)

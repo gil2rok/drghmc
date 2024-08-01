@@ -536,7 +536,6 @@ class DrGhmcDiag:
                 accept_logp = -np.inf
                 self._log_density_gradient_cache.append((None, None)) # dummy entry 
 
-            # should I do an approximate equality check bc of floating point error
             if accept_logp == 0:  # early stopping to avoid -inf in np.log1p
                 self._log_density_gradient_cache.pop()  # cache set in leapfrog() function
                 logging.debug("Pop from cache in accept with early stopping")
@@ -554,8 +553,5 @@ class DrGhmcDiag:
             (prop_logp - cur_logp)
             + (prop_hastings - cur_hastings)
             + (prop_retry_logp - cur_retry_logp)
-        )
-        # print("Hamiltonian Error:\t", np.exp(prop_logp - cur_logp))
-        # print("Num:\t", np.exp(prop_hastings + prop_retry_logp))
-        # print("Denom:\t", np.exp(cur_hastings + cur_retry_logp))        
+        )    
         return np.minimum(0, accept_frac), prop_logp

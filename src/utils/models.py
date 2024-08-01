@@ -33,7 +33,6 @@ class BayesKitModel(GradModel):
     def log_density_gradient(self, x):
         log_density, gradient = self.bsmodel.log_density_gradient(x)
         
-        
         if np.isnan(log_density) or np.isnan(gradient).any():
             raise ValueError(f"NaN values in log density or gradient at {x}")
         
@@ -47,3 +46,4 @@ class BayesKitModel(GradModel):
     
     def dims(self):
         return self.dimensions
+

@@ -1,17 +1,31 @@
 <div align="center">
 
 # Delayed rejection generalized Hamiltonian Monte Carlo
+</div>
 
-<!-- ![License](https://img.shields.io/badge/license-MIT-red.svg) 
-![Python](https://img.shields.io/badge/python-3.9%2B-blue.svg)
-![Numpy](https://img.shields.io/badge/numpy-1.21.2-blue.svg) -->
+<div align="center">
+
+[**Paper** :page_facing_up:](https://arxiv.org/abs/2406.02741) | [**Poster** :bar_chart:](#overview) | [**Tweet** :bird:](#overview)
+
+[**Overview** :telescope:](#overview) | [**Quick Start** :rocket:](#quick-start) | [**Installation** :wrench:](#installation) | [**Experiments** :scientist:](#experiments) | [**Repository Structure** :open_file_folder:](#repository-structure) | [**Citation** :scroll:](#citation) | [**Resources** :books:](#resources)
 
 </div>
-<p align="center">
+
+<!-- <div align="center">
+
+[**Paper** :page_facing_up:](https://arxiv.org/abs/2406.02741) | [**Poster** :bar_chart:](#overview) | [**Tweet** :bird:](#overview) | [**Citation** :scroll:](#citation)
+
+</div> -->
+
+<!-- <p align="center">
    [📃 <a href="https://arxiv.org/abs/2406.02741" target="_blank">Paper</a> ] • [📊 Poster WIP] • [🐦 Tweet WIP] • [📄 Citation WIP]<br>
-</p>
+</p> -->
 
 This repository contains code for experiments, manuscript, and poster of [Sampling From multiscale densities with delayed rejection generalized Hamiltonian Monte Carlo](https://arxiv.org/abs/2406.02741), submitted to NeurIPS 2024.
+
+<!-- 
+[**Paper** :page_facing_up:](https://arxiv.org/abs/2406.02741) | [**Poster** :bar_chart:](#overview) | [**Tweet** :bird:](#overview) | [**Citation** :scroll:](#citation) -->
+
 
 ## Overview :telescope:
 
@@ -22,7 +36,7 @@ We propose the delayed rejection generalized Hamiltonian Monte Carlo (DR-G-HMC) 
 
 Extensive emperical experiments demonstrate that DR-G-HMC can indeed (1) sample from multiscale densities (unlike NUTS!) and (2) resolve the inefficiencies of G-HMC while (3) maintaining competitiveness with state of the art samplers on non-multiscale densities.
 
-## General Usage :computer:
+## Quick Start :rocket:
 
 > [!TIP]
 > To use DR-G-HMC for your own hierarchical model with multiscale geometry, use the [Bayes-Kit](https://github.com/flatironinstitute/bayes-kit/blob/main/bayes_kit/drghmc.py) implementation.
@@ -42,31 +56,25 @@ cd drghmc
 pip install -r requirements.txt
 ```
 
-## Quickstart :rocket:
+## Experiments :scientist:
 
-some steps
+Reproduce experiements from the paper by running the following commands:
 
 ## Repository Structure :open_file_folder:
 
 ```python
 drghmc/
-│
 ├── configs/                # experiment configs
-│
 ├── data/                   # store sampler draws
-│
 ├── doc/                    # figures, paper manuscript, & poster
-│
 ├── posteriors/             # Stan models with data & reference draws
-│
 ├── scripts/                # scripts to run experiments
-│
 ├── src/                    # sampler implementations
 ```
 
-This repository also includes a `README.md`, `requirements.txt`, `LICENSE`, `.gitignore`, and `CITATION.bib` files. The `data` and `posteriors` directories also contain their own `README.md` files explaining their contents.
+This repository also includes a `README.md`, `requirements.txt`, `LICENSE`, and `.gitignore` files. The `data` and `posteriors` directories also contain their own `README.md` files with more information.
 
-## Citation :page_facing_up:
+## Citation :scroll:
 
 ```bibtex
 @article{turok2024sampling,

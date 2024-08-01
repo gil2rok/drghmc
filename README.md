@@ -28,13 +28,17 @@ This repository contains code for experiments, manuscript, and poster of [Sampli
 [**Layout**](#layout) :open_file_folder: • 
 [**Citation**](#citation) :scroll: • 
 [**Resources**](#resources) :books: • -->
+</div>
+
+This repository contains code for experiments, manuscript, and poster of [**Sampling From Multiscale Densities with Delayed Rejection Generalized Hamiltonian Monte Carlo**](https://arxiv.org/abs/2406.02741), submitted to NeurIPS 2024.
+
+<div align="center">
+
 [**Paper**](https://arxiv.org/abs/2406.02741) :page_facing_up: |
 [**Poster**](#overview) :bar_chart: |
 [**Tweet**](#overview) :bird:
 
 </div>
-
-This repository contains code for experiments, manuscript, and poster of [**Sampling From Multiscale Densities with Delayed Rejection Generalized Hamiltonian Monte Carlo**](https://arxiv.org/abs/2406.02741), submitted to NeurIPS 2024.
 
 ## Overview :telescope:
 

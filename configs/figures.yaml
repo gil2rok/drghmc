@@ -1,0 +1,15 @@
+defaults:
+  - /config@_here_ # import default configs
+  - _self_
+
+tags: nuts-baseline
+hyper_param: sampler_type
+posterior:
+  name: funnel10
+
+hydra:
+  launcher:
+    n_jobs: 1    
+  sweep:
+    dir: data/${posterior.name}
+    subdir: generate-figures

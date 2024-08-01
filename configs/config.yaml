@@ -1,0 +1,74 @@
+defaults:
+  - _self_
+  - override /hydra/launcher: joblib
+
+sampler:
+  generate_history: true 
+  generate_metrics: true
+  gradient_budget: 1000000 # 1M gradient evaluations
+  burn_in: 0
+  seed: 43
+  thin: 1
+  chain: 0
+  metric:
+
+posterior:
+  dir: posteriors
+  name: stochastic_volatility
+
+logging:
+  logger: wandb
+  log_history: false
+  log_metrics: false
+
+wandb:
+  project: ${posterior.name}
+  entity: gilad-turok
+  points_per_metric: 200
+
+hydra:
+  mode: MULTIRUN
+  launcher:
+    n_jobs: 100
+  sweep:
+    dir: data/${posterior.name}/${wandb.tags}
+    subdir: ${concat_sampler_params:${sampler.params}}
+  verbose: false
+  # job_logging: false
+
+figures:
+  dir: doc/figures/${posterior.name}/${tags}
+
+summary:
+  path: data/${posterior.name}/summary.csv
+  fieldnames: [
+    # sampler hyper parameters
+    sampler_type, 
+    tags, 
+    # cost error
+    error_param, 
+    error_param_squared, 
+    # funnel cost error
+    error_log_scale, 
+    error_log_scale_squared, 
+    error_latent, 
+    error_latent_squared,
+    # more sampler hyper parameters 
+    group, 
+    step_count_factor, 
+    step_count, 
+    step_count_method, 
+    step_size_factor, 
+    step_size, 
+    max_proposals, 
+    reduction_factor, 
+    damping,
+    adapt_metric, 
+    metric, 
+    adapt_metric, 
+    probabilistic, 
+    chain, 
+    # paths
+    history_path, 
+    metric_path,
+  ]

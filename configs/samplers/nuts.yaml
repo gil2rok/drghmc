@@ -1,0 +1,18 @@
+defaults:
+  - /../config@_here_ # import default configs
+  - _self_
+
+sampler:
+  params:
+    sampler_type: nuts
+    metric: identity # metric initialization
+    adapt_metric: true # metric adaptation
+  chain: 0
+
+wandb:
+  tags: nuts-baseline
+
+hydra:
+  sweeper: # convert cmd line arguments lists into multiple jobs
+    params:
+      sampler.chain: range(100)

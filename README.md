@@ -22,11 +22,11 @@ We propose the delayed rejection generalized Hamiltonian Monte Carlo (DR-G-HMC) 
 
 Extensive emperical experiments demonstrate that DR-G-HMC can indeed (1) sample from multiscale densities (unlike NUTS!) and (2) resolve the inefficiencies of G-HMC while (3) maintaining competitiveness with state of the art samplers on non-multiscale densities.
 
-## Usage :computer:
+## General Usage :computer:
 
 > [!TIP]
 > To use DR-G-HMC for your own hierarchical model with multiscale geometry, use the [Bayes-Kit](https://github.com/flatironinstitute/bayes-kit/blob/main/bayes_kit/drghmc.py) implementation.
-> 
+>
 > Bayes-Kit is a readable, well documented repository for Bayesian inference algorithms in Python. Consider starring the repository :star: along with others ![Bayes-Kit](https://img.shields.io/github/stars/flatironinstitute/bayes-kit?style=social) !
 
 ## Installation :wrench:
@@ -64,7 +64,7 @@ drghmc/
 ├── src/                    # sampler implementations
 ```
 
-This repository also includes a `README.md`, `requirements.txt`, `LICENSE`, `.gitignore`, and `CITATION.bib` files.
+This repository also includes a `README.md`, `requirements.txt`, `LICENSE`, `.gitignore`, and `CITATION.bib` files. The `data` and `posteriors` directories also contain their own `README.md` files explaining their contents.
 
 ## Citation :page_facing_up:
 

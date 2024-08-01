@@ -6,10 +6,10 @@ using namespace stan::math;
 stan::math::profile_map profiles__;
 static constexpr std::array<const char*, 5> locations_array__ =
   {" (found before start of program)",
-  " (in 'funnel10.stan', line 2, column 2 to column 9)",
-  " (in 'funnel10.stan', line 3, column 2 to column 18)",
-  " (in 'funnel10.stan', line 7, column 0 to column 17)",
-  " (in 'funnel10.stan', line 8, column 0 to column 28)"};
+  " (in '/mnt/home/gturok/drghmc/posteriors/funnel10/funnel10.stan', line 2, column 2 to column 9)",
+  " (in '/mnt/home/gturok/drghmc/posteriors/funnel10/funnel10.stan', line 3, column 2 to column 18)",
+  " (in '/mnt/home/gturok/drghmc/posteriors/funnel10/funnel10.stan', line 7, column 2 to column 19)",
+  " (in '/mnt/home/gturok/drghmc/posteriors/funnel10/funnel10.stan', line 8, column 2 to column 30)"};
 class funnel10_model final : public model_base_crtp<funnel10_model> {
  private:
   
@@ -40,7 +40,7 @@ class funnel10_model final : public model_base_crtp<funnel10_model> {
   }
   inline std::vector<std::string> model_compile_info() const noexcept {
     return std::vector<std::string>{"stanc_version = stanc3 v2.33.1",
-             "stancflags = --filename-in-msg=funnel10.stan"};
+             "stancflags = --include-paths=."};
   }
   // Base log prob
   template <bool propto__, bool jacobian__, typename VecR, typename VecI,

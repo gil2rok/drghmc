@@ -5,7 +5,8 @@
 
 <div align="center">
 
-[**Paper**](https://arxiv.org/abs/2406.02741) :page_facing_up: | [**Poster**](#overview) :bar_chart: | [**Tweet**](#overview) :bird:
+<!-- cleanly separate them -->
+[[**Paper**](https://arxiv.org/abs/2406.02741) :page_facing_up:] • [[**Poster**](#overview) :bar_chart:] • [[**Tweet**](#overview) :bird:]
 
 <!-- [**Overview** :telescope:](#overview) | [**Quick Start** :rocket:](#quick-start) | [**Installation** :wrench:](#installation) | [**Experiments** :scientist:](#experiments) | [**Repository Structure** :open_file_folder:](#repository-structure) | [**Citation** :scroll:](#citation) | [**Resources** :books:](#resources) -->
 

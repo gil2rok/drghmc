@@ -21,13 +21,13 @@ This repository contains code for experiments, manuscript, and poster of [Sampli
 
 # Delayed Rejection Generalized Hamiltonian Monte Carlo
 
-[**Overview** :telescope:](#overview) • 
-[**Quick Start** :rocket:](#quick-start) • 
-[**Installation** :wrench:](#installation) • 
-[**Experiments** :scientist:](#experiments) • 
-[**Layout** :open_file_folder:](#layout) • 
-[**Citation** :scroll:](#citation) • 
-[**Resources** :books:](#resources)
+[**Overview**](#overview) :telescope: • 
+[**Quick Start**](#quick-start) :rocket: • 
+[**Installation**](#installation) :wrench: • 
+[**Experiments**](#experiments) :scientist: • 
+[**Layout**](#layout) :open_file_folder: • 
+[**Citation**](#citation) :scroll: • 
+[**Resources**](#resources) :books:
 
 </div>
 
@@ -40,10 +40,6 @@ This repository contains code for experiments, manuscript, and poster of [**Samp
 - **[View the Poster](#overview) :bar_chart:**.  Check out the poster summarizing our work.
 
 - **[See the Tweet](#overview) :bird:**.  Read our announcement on Twitter.
-
-<!-- [**Paper**](https://arxiv.org/abs/2406.02741) :page_facing_up: • 
-[**Poster**](#overview) :bar_chart: • 
-[**Tweet**](#overview) :bird: -->
 
 
 ## Overview :telescope:

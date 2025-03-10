@@ -6,7 +6,7 @@ This repository contains experimental code for the paper [Sampling From multisca
 
 We propose the delayed rejection generalized Hamiltonian Monte Carlo (**DR-G-HMC**) algorithm to generate samples from an unnormalized probability distribution.
 
-DR-G-HMC is a Markov chain Monte Carlo method that locally adapts step sizes in a clever way. This makes DR-G-HMC especially useful for *efficiently* sampling from distributions with *multiscale geometry* that commonly arises in Bayesian hiearchical models. Multiscale geometry means that the curvature (e.g. as measured by the Hessian) of the target distribution varies across the parameter space.
+DR-G-HMC is a Markov chain Monte Carlo method that locally adapts step sizes in a clever way. This makes DR-G-HMC especially useful for *efficiently* sampling from distributions with *multiscale geometry*, where the curvature of the target distribution varies across the parameter space. This is a common issue in Bayesian inference for hierarchical models.
 
 To use DR-G-HMC, check out the implementation in [Bayes-Kit](https://github.com/flatironinstitute/bayes-kit/blob/main/bayes_kit/drghmc.py), a readable and pedagogical repository for Bayesian inference algorithms in Python.
 

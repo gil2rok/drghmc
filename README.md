@@ -33,7 +33,7 @@ TODO: Add instructions to run experiments.
 
 Generating samples from an unnormalized probability distribution is a key problem in statistics and machine learning. Markov chain Monte Carlo (MCMC) methods are a popular class of algorithms that construct Markov chains with the target distribution as their stationary distribution. The chain is then simulated for a long time to generate samples from the target distribution.
 
-Hamiltonian Monte Carlo (HMC) is an MCMC method that simulates a *ficticious* phyiscal system with gradient information. While effective for high-dimensional distributions, HMC struggles with multiscale geometry. DR-G-HMC builds upon the Delayed Rejection HMC (DR-HMC) algorithm to address this issue.
+Hamiltonian Monte Carlo (HMC) is an MCMC method that simulates a *ficticious* phyiscal system with gradients of the target distribution. While effective for high-dimensional distributions, HMC struggles with multiscale geometry. DR-G-HMC builds upon the Delayed Rejection HMC (DR-HMC) algorithm to address this issue.
 
 #### Papers:
 - [Delayed rejection Hamiltonian Monte Carlo for sampling multiscale distributions](https://arxiv.org/abs/2110.00610)

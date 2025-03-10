@@ -4,7 +4,7 @@
 
 This repository contains experimental code for the paper [Sampling From multiscale densities with delayed rejection generalized Hamiltonian Monte Carlo](https://arxiv.org/abs/2406.02741), accepted to AIStats 2025.
 
-We propose the delayed rejection generalized Hamiltonian Monte Carlo (DR-G-HMC) algorithm to generate samples from (unnormalized) probability distributions.
+We propose the delayed rejection generalized Hamiltonian Monte Carlo (**DR-G-HMC**) algorithm to generate samples from (unnormalized) probability distributions.
 
 DR-G-HMC is a Markov chain Monte Carlo method that locally adapts step sizes in a clever way. This makes DR-G-HMC especially useful for *efficiently* sampling from distributions with *multiscale geometry* (e.g. curvature) that commonly arises in Bayesian hiearchical models.
 
@@ -30,12 +30,18 @@ TODO: Add instructions to run experiments.
 
 ## Background + Resources :books:
 
-Sampling from a probability distribution is a widespread problem in statistics and machine learning. The goal is to generate samples from a distribution that is difficult to sample from directly. Markov chain Monte Carlo (MCMC) methods are a popular class of algorithms that generate samples from a distribution by constructing a Markov chain that has the desired distribution as its stationary distribution. The chain is then run for a long time to generate samples from the distribution.
+Generating samples from an unnormalized probability distribution is a key problem in statistics and machine learning. Markov chain Monte Carlo (MCMC) methods are a popular class of algorithms that construct Markov chains with the target distribution as their stationary distribution. The chain is then simulated for a long time to generate samples from the target distribution.
 
-Hamiltonian Monte Carlo (HMC) is a popular type of MCMC method that generates samples by simulating the dynamics of a *ficticious* physical system with gradient information. HMC is particularly useful for sampling from high-dimensional distributions but struggles with multiscale geometry, where the curvature of the distribution varies across different regions of the space. DR-G-HMC is a modification of HMC that addresses this issue and improves upon prior work of DR-HMC.
+Hamiltonian Monte Carlo (HMC) is an MCMC method that simulates a *ficticious* phyiscal system with gradient information. While effective for high-dimensional distributions, HMC struggles with multiscale geometry. DR-G-HMC builds upon the Delayed Rejection HMC (DR-HMC) algorithm to address this issue.
 
-### Papers:
-TODO: Add links to papers.
+#### Papers:
+- [Delayed rejection Hamiltonian Monte Carlo for sampling multiscale distributions](https://arxiv.org/abs/2110.00610)
+- [Non-reversibly updating a uniform [0,1] value for Metropolis accept/reject decisions](https://arxiv.org/abs/2001.11950)
+- [A conceptual introduction to Hamiltonian Monte Carlo](https://arxiv.org/pdf/1701.02434.pdf)
+- [MCMC using Hamiltonian dynamics](https://arxiv.org/pdf/1206.1901.pdf)
+- [Tuning-free generalized Hamiltonian Monte Carlo](https://proceedings.mlr.press/v151/hoffman22a/hoffman22a.pdf)
+- [Slice sampling](https://arxiv.org/abs/physics/0009028)
+- [ATLAS: Adapting Trajectory Lengths and Step-Size for Hamiltonian Monte Carlo](https://arxiv.org/abs/2410.21587)
 
 ## Layout :open_file_folder:
 

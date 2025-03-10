@@ -1,0 +1,32 @@
+defaults:
+  - /../config@_here_ # import default configs
+  - _self_
+
+sampler:
+  params:
+    sampler_type: ghmc
+    step_count_method: const_step_count
+    step_size_factor: 2
+    # step_size: 0.1
+    max_proposals: 1
+    reduction_factor: 4
+    damping: 0.08
+    metric: 1
+    adapt_metric: true
+    probabilistic: false
+
+wandb:
+  tags: "ghmc-baseline"
+
+hydra:
+  launcher:
+    cpus_per_task: ${sampler.chains}
+
+# hydra:
+#   sweeper: # convert cmd line arguments lists into multiple jobs
+#     params:
+#       sampler.chain: range(100)
+#       sampler.params.step_size_factor: 2
+#       sampler.params.reduction_factor: 4
+#       sampler.params.max_proposals: 1
+#       sampler.params.damping: 0.08

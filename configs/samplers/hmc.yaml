@@ -6,18 +6,22 @@ sampler:
   params:
     sampler_type: hmc
     step_count_factor: 0.9
-    step_size_factor: null
-    step_size: 0.01
+    step_size_factor: 1
+    max_proposals: 1
     damping: 1.0
     metric: 1
-    adapt_metric: false
+    adapt_metric: true
     probabilistic: false
 
 wandb:
   tags: "hmc-baseline"
 
+
 hydra:
-  # convert cmd line arguments lists into multiple jobs
-  sweeper:
-    params:
-      sampler.chain: range(100)
+  launcher:
+    cpus_per_task: ${sampler.chains}
+
+# hydra:
+#   sweeper: # convert cmd line arguments lists into multiple jobs
+#     params:
+#       sampler.chain: range(100)

@@ -1,6 +1,7 @@
 defaults:
   - _self_
-  - override /hydra/launcher: joblib
+  - override /hydra/launcher: submitit_slurm
+  # - override /hydra/launcher: submitit_local
 
 sampler:
   generate_history: true 
@@ -9,7 +10,8 @@ sampler:
   burn_in: 0
   seed: 43
   thin: 1
-  chain: 0
+  chain: null
+  chains: 100
   metric:
 
 posterior:
@@ -29,7 +31,13 @@ wandb:
 hydra:
   mode: MULTIRUN
   launcher:
-    n_jobs: 100
+    nodes: 1
+    mem_gb: 900
+    cpus_per_task: null
+    tasks_per_node: 1
+    partition: ccm
+    constraint: rome
+    timeout_min: 600
   sweep:
     dir: data/${posterior.name}/${wandb.tags}
     subdir: ${concat_sampler_params:${sampler.params}}
@@ -71,4 +79,7 @@ summary:
     # paths
     history_path, 
     metric_path,
+    # l2 errors
+    error_param_l2,
+    error_param_squared_l2,
   ]

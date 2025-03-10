@@ -1,0 +1,30 @@
+defaults:
+  - /../config@_here_ # import default configs
+  - _self_
+
+sampler:
+  params:
+    sampler_type: drghmc-refresh
+    step_count_method: const_step_count
+    step_size_factor: 2
+    max_proposals: 3
+    reduction_factor: 4
+    damping: 1.0
+    metric: 1
+    adapt_metric: true
+    probabilistic: false
+
+wandb:
+  tags: "baseline"
+
+hydra:
+  launcher:
+    cpus_per_task: ${sampler.chains}
+
+# hydra:
+#   sweeper: # convert cmd line arguments lists into multiple jobs
+#     params:
+#       sampler.chain: range(100)
+#       sampler.params.step_size_factor: 2
+#       sampler.params.reduction_factor: 4
+#       sampler.params.max_proposals: 3

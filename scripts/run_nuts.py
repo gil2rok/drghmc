@@ -1,8 +1,11 @@
 import logging
+import multiprocessing
+import os
 
 import cmdstanpy as cmd
 import hydra
 import numpy as np
+from omegaconf import OmegaConf
 
 from src.utils.logging import (
     logging_context,
@@ -32,9 +35,19 @@ def configure_sampler(sampler, posterior):
     seed = int(str(sampler.seed) + str(sampler.chain))
 
     inits = get_init(posterior.name, posterior.dir, sampler.chain)
+    print(f"Init Shape: {inits.shape}")
+    logging.info(f"Init Shape: {inits.shape}")
     param_names = get_param_names(posterior.name, posterior.dir)
     init = {param_name: init for param_name, init in zip(param_names, inits)}
-
+    
+    #### stochastic volatility
+    # expected: [num_chains, num_params, num_draws]
+    # actual: [num_chains, 1, num_params]
+    
+    #### rosenbrock
+    # expected: [num_chains, num_params, num_draws]
+    # actual:  [num_params]
+    
     if sampler.params.metric == "diag_cov":
         diag_cov = get_diagonal_covariance(posterior.name, posterior.dir)
         inv_metric = {"inv_metric": diag_cov}
@@ -76,7 +89,6 @@ def enforce_gradient_budget(nuts, gradient_budget):
 
 def format_history(cmdstan_history, config):
     nuts_np = enforce_gradient_budget(cmdstan_history, config.sampler.gradient_budget)
-
     history = {
         "draws": nuts_np[:, 7:],
         "grad_evals": list(np.cumsum(nuts_np[:, 4], dtype=np.uint)),  # cumulative gradient evaluations
@@ -113,9 +125,10 @@ def format_history(cmdstan_history, config):
 
     return history
 
-
-@hydra.main(version_base=None, config_path="../configs/samplers", config_name="nuts")
-def main(config):
+    
+def worker(config, chain):
+    os.sched_setaffinity(0, {chain % multiprocessing.cpu_count()})
+    OmegaConf.update(config, "sampler.chain", chain)
 
     if config.sampler.generate_history:
         with logging_context(config, job_type="history"):
@@ -142,6 +155,19 @@ def main(config):
             metrics = compute_metrics(history, config)
             save_dict_to_npz(dictionary=metrics, filename=f"metrics__chain={config.sampler.chain}")
             write_summary(config, metrics)
+
+
+@hydra.main(version_base=None, config_path="../configs/samplers", config_name="nuts")
+def main(config):
+    processes = []
+    
+    for chain in range(config.sampler.chains):
+        p = multiprocessing.Process(target=worker, args=(config, chain))
+        processes.append(p)
+        p.start()
+        
+    for p in processes:
+        p.join()
 
 
 if __name__ == "__main__":

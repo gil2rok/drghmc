@@ -1,7 +1,9 @@
-from collections import defaultdict
+import multiprocessing
 import os
+from collections import defaultdict
 
 import hydra
+from omegaconf import OmegaConf
 
 from src.samplers.drghmc import DrGhmcDiag
 from src.utils.delayed_rejection import compute_accept_prob
@@ -22,6 +24,8 @@ def configure_sampler(sampler, posterior):
 
     model = BayesKitModel(model_path=model_path, data_path=data_path)
     model.log_density_gradient = grad_counter(model.log_density_gradient)
+    
+    init = get_init(posterior.name, posterior.dir, sampler.chain)
 
     if sampler.params.step_size_factor:
         nuts_step_size = get_nuts_step_size(sampler, posterior)
@@ -46,8 +50,6 @@ def configure_sampler(sampler, posterior):
         ]
 
     metric = get_nuts_metric(sampler, posterior)
-
-    init = get_init(posterior.name, posterior.dir, sampler.chain)
 
     damping = float(sampler.params.damping)  # w&b casts damping float 1.0 to 1
 
@@ -106,8 +108,10 @@ def run_sampler(sampler, config):
     return history
 
 
-@hydra.main(version_base=None, config_path="../configs/samplers", config_name="drghmc")
-def main(config):
+def worker(config, chain):
+    os.sched_setaffinity(0, {chain % multiprocessing.cpu_count()})
+    OmegaConf.update(config, "sampler.chain", chain)
+    
     if config.sampler.generate_history:
         with logging_context(config, job_type="history"):
             
@@ -124,5 +128,18 @@ def main(config):
             write_summary(config, metrics)
             
 
+@hydra.main(version_base=None, config_path="../configs/samplers", config_name="drghmc")
+def main(config):
+    processes = []
+    
+    for chain in range(config.sampler.chains):
+        p = multiprocessing.Process(target=worker, args=(config, chain))
+        processes.append(p)
+        p.start()
+        
+    for p in processes:
+        p.join()
+
+    
 if __name__ == "__main__":
     main()

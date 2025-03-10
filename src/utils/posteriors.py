@@ -31,10 +31,12 @@ def get_init(posterior, posterior_dir, chain):
     
     if posterior == "stochastic_volatility":
         fname = os.path.join(posterior_dir, posterior, "stochastic_volatility.inits.npy")
-        return np.load(fname)
+        arr = np.load(fname)
+        num_chains = arr.shape[0]
+        chain_idx = chain % num_chains
+        return np.ascontiguousarray(arr[chain_idx, :, :].squeeze())
     
-    ref_draws = get_ref_draws(posterior, posterior_dir)
-    
+    ref_draws = get_ref_draws(posterior, posterior_dir) # [num_chains, num_params, num_draws]
     num_chains = ref_draws.shape[0]
     chain_idx = chain % num_chains
     draw_idx = -1 - (chain // num_chains)
@@ -100,7 +102,7 @@ def get_true_params_mean(posterior, posterior_dir):
     
     if posterior == "stochastic_volatility":
         fname = os.path.join(posterior_dir, posterior, "stochastic_volatility.true_params.npz")
-        return np.load(fname)["mean"]
+        return np.mean(np.load(fname)["mean"], axis=0)
     
     ref_draws = get_ref_draws(posterior, posterior_dir)
     ref_params_mean = ref_draws.mean(axis=(0, 2))
@@ -141,7 +143,7 @@ def get_true_params_std(posterior, posterior_dir):
     
     if posterior == "stochastic_volatility":
         fname = os.path.join(posterior_dir, posterior, "stochastic_volatility.true_params.npz")
-        return np.load(fname)["std"]
+        return np.mean(np.load(fname)["std"], axis=0)
     
     ref_draws = get_ref_draws(posterior, posterior_dir)
     ref_params_std = ref_draws.std(axis=(0, 2))
@@ -181,7 +183,7 @@ def get_true_params_squared_mean(posterior, posterior_dir):
     """
     if posterior == "stochastic_volatility":
         fname = os.path.join(posterior_dir, posterior, "stochastic_volatility.true_params.npz")
-        return np.load(fname)["squard_mean"]
+        return np.mean(np.load(fname)["squared_mean"], axis=0)
     
     ref_draws = get_ref_draws(posterior, posterior_dir)
     ref_draws_squared = np.square(ref_draws)
@@ -222,7 +224,7 @@ def get_true_params_squared_std(posterior, posterior_dir):
     """
     if posterior == "stochastic_volatility":
         fname = os.path.join(posterior_dir, posterior, "stochastic_volatility.true_params.npz")
-        return np.load(fname)["squared_std"]
+        return np.mean(np.load(fname)["squared_std"], axis=0)
     
     ref_draws = get_ref_draws(posterior, posterior_dir)
     ref_draws_squared = np.square(ref_draws)

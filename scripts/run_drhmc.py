@@ -1,8 +1,10 @@
-from collections import defaultdict
+import multiprocessing
 import os
+from collections import defaultdict
 
 import hydra
 import numpy as np
+from omegaconf import OmegaConf
 
 from src.samplers.drghmc import DrGhmcDiag
 from src.utils.delayed_rejection import compute_accept_prob
@@ -109,8 +111,9 @@ def run_sampler(sampler, config):
     return history
 
 
-@hydra.main(version_base=None, config_path="../configs/samplers", config_name="drhmc")
-def main(config):
+def worker(config, chain):
+    os.sched_setaffinity(0, {chain % multiprocessing.cpu_count()})
+    OmegaConf.update(config, "sampler.chain", chain)
         
     if config.sampler.generate_history:
         with logging_context(config, job_type="history"):
@@ -128,5 +131,18 @@ def main(config):
             write_summary(config, metrics)
 
 
+@hydra.main(version_base=None, config_path="../configs/samplers", config_name="drhmc")
+def main(config):
+    processes = []
+    
+    for chain in range(config.sampler.chains):
+        p = multiprocessing.Process(target=worker, args=(config, chain))
+        processes.append(p)
+        p.start()
+        
+    for p in processes:
+        p.join()
+
+    
 if __name__ == "__main__":
     main()

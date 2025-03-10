@@ -58,6 +58,9 @@ def compute_cost(draws, grad_evals, config):
     metrics["error_param"] = np.max(cost_param, axis=1)
     metrics["error_param_squared"] = np.max(cost_param_squared, axis=1)
     
+    metrics["error_paran_l2"] = np.linalg.norm(cost_param, axis=1)
+    metrics["error_param_squared_l2"] = np.linalg.norm(cost_param_squared, axis=1)
+    
     # specific cost metrics for funnel10
     if config.posterior.name == "funnel10" or config.posterior.name == "funnel50":
         metrics["error_log_scale"] = cost_param[:, 0]

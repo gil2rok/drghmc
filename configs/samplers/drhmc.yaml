@@ -8,7 +8,7 @@ sampler:
     step_count_factor: 0.9
     step_size_factor: 2
     max_proposals: 3
-    reduction_factor: 8
+    reduction_factor: 3
     damping: 1.0
     metric: 1
     adapt_metric: true
@@ -18,9 +18,13 @@ wandb:
   tags: "drhmc-baseline"
 
 hydra:
-  sweeper: # convert cmd line arguments lists into multiple jobs
-    params:
-      sampler.chain: range(100)
-      sampler.params.step_size_factor: 2
-      sampler.params.reduction_factor: 4
-      sampler.params.max_proposals: 3
+  launcher:
+    cpus_per_task: ${sampler.chains}
+
+# hydra:
+#   sweeper: # convert cmd line arguments lists into multiple jobs
+#     params:
+#       sampler.chain: range(100)
+#       sampler.params.step_size_factor: 2
+#       sampler.params.reduction_factor: 4
+#       sampler.params.max_proposals: 3

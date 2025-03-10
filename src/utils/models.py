@@ -23,6 +23,7 @@ class BayesKitModel(GradModel):
             model_lib=model_path,
             data=data_path,
             seed=1234,
+            # make_args=["STAN_THREADS=True"],
             make_args=["STAN_THREADS=True", "TBB_CXX_TYPE=gcc"]
         )
         self.dimensions = self.bsmodel.param_unc_num()

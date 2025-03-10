@@ -11,7 +11,7 @@ import seaborn as sns
 
 from src.utils.summary_utils import read_from_summary
 
-sns.set_theme(style="whitegrid", font_scale=1.8)
+sns.set_theme(style="whitegrid", font_scale=6)
 plt.rcParams.update({
     "text.usetex": True,
     "font.family": "serif",
@@ -21,7 +21,7 @@ plt.rcParams.update({
 
 def load_data(config):
     path = os.path.join("data", config.posterior.name, "summary.csv")
-    summary_lazy = pl.scan_csv(path, has_header=True)
+    summary_lazy = pl.scan_csv(path, has_header=True, truncate_ragged_lines=True)
     # cast a few columns to specifc polars data types
     summary_lazy = summary_lazy.with_columns(
         pl.col("step_size").cast(pl.Float32),
@@ -43,8 +43,7 @@ def load_data(config):
         .collect()
     )
 
-    if config.tags == "baseline" and config.posterior.name not in set(["funnel10", "funnel30", "funnel50"]):
-        print("HERE")
+    if config.tags == "baseline" and config.posterior.name not in set(["funnel10", "funnel30", "funnel50", "funnel100", "funnel200", "funnel250", "rosenbrock2"]):
         summary = summary.filter(
             ~pl.col("group").str.contains(
                 "adapt_metric=False__metric=identity__sampler_type=nuts"
@@ -52,7 +51,7 @@ def load_data(config):
         )
 
     summary = summary.with_columns(
-        pl.col("sampler_type").replace("nuts", "NUTS").replace("drhmc", "DR-HMC").replace("drghmc", "DR-G-HMC")
+        pl.col("sampler_type").replace("nuts", "NUTS").replace("drhmc", "DR-HMC").replace("drghmc", "DR-G-HMC").replace("ghmc", "G-HMC").replace("hmc", "HMC").replace("drghmc-refresh", "DR-G-HMC_Refresh")
     )
     return summary
 
@@ -110,6 +109,9 @@ def save_to_csv(summary, error_params, hyper_param, figures_dir):
 
 
 def make_box_plot(data, hyper_param, posterior, value_vars, figures_dir):
+    # remove error_param_squared column
+    data = data[data["param"] != "error_param_squared"]
+    
     fig = sns.catplot(
         data=data,
         kind="box",
@@ -117,22 +119,25 @@ def make_box_plot(data, hyper_param, posterior, value_vars, figures_dir):
         y="normalized error",
         hue="sampler_type",
         # hue_order=hyper_param_order,
-        col="param",
-        col_wrap=2,
-        col_order=value_vars,
-        aspect=2,
+        # col="param",
+        # col_wrap=2,
+        # col_order=value_vars,
+        aspect=3,
+        width=0.6,
         showmeans=True,
         meanline=True,
         meanprops=dict(linestyle="--", linewidth=2, color="black"),
+        # showfliers=False,
     )
 
     # set y axis to log scale
     fig.set(yscale="log")
-    fig.axes.flat[0].set_ylabel("Error in Mean")
-    fig.axes.flat[1].set_ylabel("Error in Variance")
+    fig.set_ylabels("Error")
+    fig.axes.flat[0].set_title(r'Error in Mean ($\mathcal{L}_{\theta, T}$)')
+    # fig.axes.flat[1].set_title(r'Error in Variance ($\mathcal{L}_{\theta^2, T}$)')
     
     fname = os.path.join(figures_dir, f"box_error.png")
-    fig.savefig(fname)
+    fig.savefig(fname, dpi=300)
 
 
 def make_mean_plot(data, hyper_param, posterior, value_vars, figures_dir):
@@ -236,7 +241,7 @@ def make_grad_vs_error_plot(
     n_samples = 100000
     complete_summary = read_from_summary(summary, history_list, metrics_list, n_samples)
 
-    grad_rounding = -3
+    grad_rounding = -4
     complete_summary = complete_summary.with_columns(
         pl.col("grad_evals")
         .map_elements(lambda s: np.round(s, grad_rounding))
@@ -288,7 +293,7 @@ def make_grad_vs_error_plot(
 
 @hydra.main(version_base=None, config_path="../configs/", config_name="figures")
 def main(config):
-
+    print("hello")
     summary = load_data(config)
     hyper_params_order, error_params = setup(summary, config)
     save_to_csv(summary, error_params, config.hyper_param, config.figures.dir)

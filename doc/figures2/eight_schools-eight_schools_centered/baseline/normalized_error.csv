@@ -1,0 +1,8 @@
+group,sampler_type,literal,mean,std,median,10,90,error
+adapt_metric=True__metric=identity__sampler_type=nuts,NUTS,,0.12724426888768614,0.05837321582600255,0.12470693102810156,0.05837213591506286,0.1980873876994327,error_param
+adapt_metric=True__metric=identity__sampler_type=nuts,NUTS,,0.07934774566194194,0.034622292640660406,0.07669157209618424,0.034384120765319395,0.1268095489006379,error_param_squared
+group,sampler_type,literal,mean,std,median,10,90,error
+adapt_metric=True__damping=0.08__max_proposals=3__metric=1__probabilistic=False__reduction_factor=4__sampler_type=drghmc__step_count_method=const_step_count__step_size_factor=2,DR-G-HMC,,0.1106141686839229,0.1828502610673246,0.07451673690715616,0.031473406905318045,0.15264375468090663,error_param
+adapt_metric=True__metric=identity__sampler_type=nuts,NUTS,,0.12724426888768614,0.05837321582600255,0.12470693102810156,0.05837213591506286,0.1980873876994327,error_param
+adapt_metric=True__damping=0.08__max_proposals=3__metric=1__probabilistic=False__reduction_factor=4__sampler_type=drghmc__step_count_method=const_step_count__step_size_factor=2,DR-G-HMC,,0.12104820115533045,0.31125358077164494,0.06433067478248441,0.03738394129020204,0.14132822239080217,error_param_squared
+adapt_metric=True__metric=identity__sampler_type=nuts,NUTS,,0.07934774566194194,0.034622292640660406,0.07669157209618424,0.034384120765319395,0.1268095489006379,error_param_squared

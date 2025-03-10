@@ -436,9 +436,17 @@ class DrGhmcDiag:
         #     scale=np.sqrt(self._damping * np.diag(self._metric)),
         #     size=self._dim,
         # )
-        self._rho = rho if rho is not None else self._rng.multivariate_normal(
-            mean=self._rho * np.sqrt(1 - self._damping),
-            cov=self._damping * np.diag(self._metric),
+        
+        # self._rho = rho if rho is not None else self._rng.multivariate_normal(
+        #     mean=self._rho * np.sqrt(1 - self._damping),
+        #     cov=self._damping * np.diag(self._metric),
+        #     method="cholesky",
+        # )
+        
+        # Faster than multivariate_normal by assuming identity metric
+        self._rho = rho if rho is not None else self._rng.normal(
+            loc=self._rho * np.sqrt(1 - self._damping), 
+            scale=np.sqrt(self._damping)
         )
         cur_logp = self.joint_logp(self._theta, self._rho)
         cur_hastings, reject_logp = 0.0, 0.0
